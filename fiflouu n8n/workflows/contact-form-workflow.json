@@ -1,0 +1,131 @@
+{
+  "name": "Contact Form - Data Collection",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Contact Form",
+        "formDescription": "Please fill in your contact information",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "John Doe"
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "requiredField": true,
+              "placeholder": "john@example.com"
+            },
+            {
+              "fieldLabel": "Phone",
+              "fieldType": "text",
+              "requiredField": false,
+              "placeholder": "+1 555 123 4567"
+            },
+            {
+              "fieldLabel": "Company",
+              "fieldType": "text",
+              "requiredField": false,
+              "placeholder": "Acme Inc."
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Any additional information..."
+            }
+          ]
+        },
+        "respondWith": "text",
+        "responseText": "Thank you! Your information has been received."
+      },
+      "id": "form-trigger-1",
+      "name": "Contact Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [240, 300],
+      "webhookId": "contact-form"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "set-name",
+              "name": "name",
+              "value": "={{ $json['Full Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "set-email",
+              "name": "email",
+              "value": "={{ $json['Email'] }}",
+              "type": "string"
+            },
+            {
+              "id": "set-phone",
+              "name": "phone",
+              "value": "={{ $json['Phone'] }}",
+              "type": "string"
+            },
+            {
+              "id": "set-company",
+              "name": "company",
+              "value": "={{ $json['Company'] }}",
+              "type": "string"
+            },
+            {
+              "id": "set-notes",
+              "name": "notes",
+              "value": "={{ $json['Notes'] }}",
+              "type": "string"
+            },
+            {
+              "id": "set-date",
+              "name": "submitted_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-fields-1",
+      "name": "Format Contact Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Contact Form": {
+      "main": [
+        [
+          {
+            "node": "Format Contact Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  },
+  "tags": [
+    {
+      "name": "contacts"
+    },
+    {
+      "name": "form"
+    }
+  ]
+}
