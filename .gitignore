@@ -2,6 +2,11 @@
 .DS_Store
 Thumbs.db
 
+# MCP config and env files (contain API keys)
+.mcp.json
+.env
+fiflouu n8n/.env
+
 # Large database files (rebuild with: cd "fiflouu n8n" && npm run db:rebuild)
 fiflouu n8n/data/nodes.db
 fiflouu n8n/data/nodes.db-shm
