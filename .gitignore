@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large database files (rebuild with: cd "fiflouu n8n" && npm run db:rebuild)
+fiflouu n8n/data/nodes.db
+fiflouu n8n/data/nodes.db-shm
+fiflouu n8n/data/nodes.db-wal
+fiflouu n8n/data/templates.db
+fiflouu n8n/n8n-nodes.db
+
+# Compiled output (rebuild with: cd "fiflouu n8n" && npm run build)
+fiflouu n8n/dist/
+
+# Dependencies
+fiflouu n8n/node_modules/
+
+# Log/temp files from project
+fiflouu n8n/fetch_log.txt
+fiflouu n8n/test-output.txt
+fiflouu n8n/coverage.json
