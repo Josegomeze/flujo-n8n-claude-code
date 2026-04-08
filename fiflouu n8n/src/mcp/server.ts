@@ -1057,6 +1057,11 @@ export class N8NDocumentationMCPServer {
         // No required parameters - all are optional
         validationResult = { valid: true, errors: [] };
         break;
+      case 'manage_contacts':
+        validationResult = args.action
+          ? { valid: true, errors: [] }
+          : { valid: false, errors: [{ field: 'action', message: 'action is required' }] };
+        break;
       case 'n8n_deploy_template':
         // Requires templateId parameter
         validationResult = args.templateId !== undefined
@@ -1613,8 +1618,177 @@ export class N8NDocumentationMCPServer {
         };
       }
 
+      case 'manage_contacts': {
+        this.validateToolParams(name, args, ['action']);
+        await this.ensureInitialized();
+        return this.handleManageContacts(args);
+      }
+
       default:
         throw new Error(`Unknown tool: ${name}`);
+    }
+  }
+
+  private async handleManageContacts(args: any): Promise<any> {
+    const db = this.db!;
+    const action = args.action;
+
+    switch (action) {
+      case 'create': {
+        if (!args.name) {
+          return { success: false, error: 'name is required to create a contact' };
+        }
+        // Ensure table exists
+        db.exec(`CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          company TEXT,
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        const stmt = db.prepare(
+          'INSERT INTO contacts (name, email, phone, company, notes) VALUES (?, ?, ?, ?, ?)'
+        );
+        const result = stmt.run(
+          args.name,
+          args.email || null,
+          args.phone || null,
+          args.company || null,
+          args.notes || null
+        );
+        return {
+          success: true,
+          contact: {
+            id: result.lastInsertRowid,
+            name: args.name,
+            email: args.email || null,
+            phone: args.phone || null,
+            company: args.company || null,
+            notes: args.notes || null,
+          },
+        };
+      }
+
+      case 'list': {
+        db.exec(`CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          company TEXT,
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        const limit = args.limit || 50;
+        const offset = args.offset || 0;
+        let contacts: any[];
+
+        if (args.search) {
+          const searchTerm = `%${args.search}%`;
+          const stmt = db.prepare(
+            'SELECT * FROM contacts WHERE name LIKE ? OR email LIKE ? OR company LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+          );
+          contacts = stmt.all(searchTerm, searchTerm, searchTerm, limit, offset);
+        } else {
+          const stmt = db.prepare('SELECT * FROM contacts ORDER BY created_at DESC LIMIT ? OFFSET ?');
+          contacts = stmt.all(limit, offset);
+        }
+
+        const countStmt = db.prepare('SELECT COUNT(*) as total FROM contacts');
+        const total = countStmt.get();
+
+        return { success: true, contacts, total: total?.total || 0, limit, offset };
+      }
+
+      case 'get': {
+        if (!args.id) {
+          return { success: false, error: 'id is required to get a contact' };
+        }
+        db.exec(`CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          company TEXT,
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        const stmt = db.prepare('SELECT * FROM contacts WHERE id = ?');
+        const contact = stmt.get(args.id);
+        if (!contact) {
+          return { success: false, error: `Contact with id ${args.id} not found` };
+        }
+        return { success: true, contact };
+      }
+
+      case 'update': {
+        if (!args.id) {
+          return { success: false, error: 'id is required to update a contact' };
+        }
+        db.exec(`CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          company TEXT,
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        const fields: string[] = [];
+        const values: any[] = [];
+        if (args.name !== undefined) { fields.push('name = ?'); values.push(args.name); }
+        if (args.email !== undefined) { fields.push('email = ?'); values.push(args.email); }
+        if (args.phone !== undefined) { fields.push('phone = ?'); values.push(args.phone); }
+        if (args.company !== undefined) { fields.push('company = ?'); values.push(args.company); }
+        if (args.notes !== undefined) { fields.push('notes = ?'); values.push(args.notes); }
+
+        if (fields.length === 0) {
+          return { success: false, error: 'No fields provided to update' };
+        }
+
+        fields.push('updated_at = CURRENT_TIMESTAMP');
+        values.push(args.id);
+
+        const stmt = db.prepare(`UPDATE contacts SET ${fields.join(', ')} WHERE id = ?`);
+        const result = stmt.run(...values);
+        if (result.changes === 0) {
+          return { success: false, error: `Contact with id ${args.id} not found` };
+        }
+
+        const updated = db.prepare('SELECT * FROM contacts WHERE id = ?').get(args.id);
+        return { success: true, contact: updated };
+      }
+
+      case 'delete': {
+        if (!args.id) {
+          return { success: false, error: 'id is required to delete a contact' };
+        }
+        db.exec(`CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          company TEXT,
+          notes TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        const stmt = db.prepare('DELETE FROM contacts WHERE id = ?');
+        const result = stmt.run(args.id);
+        if (result.changes === 0) {
+          return { success: false, error: `Contact with id ${args.id} not found` };
+        }
+        return { success: true, message: `Contact ${args.id} deleted` };
+      }
+
+      default:
+        return { success: false, error: `Unknown action: ${action}. Valid actions: create, list, get, update, delete` };
     }
   }
 

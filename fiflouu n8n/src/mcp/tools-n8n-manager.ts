@@ -755,4 +755,65 @@ export const n8nManagementTools: ToolDefinition[] = [
       openWorldHint: true,
     },
   },
+  // Contact Data Collection Tool
+  {
+    name: 'manage_contacts',
+    description: `Manage contact data (leads, users). Actions: create (add new contact), list (query contacts), get (by id), update (modify contact), delete (remove contact).`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['create', 'list', 'get', 'update', 'delete'],
+          description: 'Action to perform on contacts',
+        },
+        id: {
+          type: 'number',
+          description: 'Contact ID (required for get, update, delete)',
+        },
+        name: {
+          type: 'string',
+          description: 'Contact full name (required for create)',
+        },
+        email: {
+          type: 'string',
+          description: 'Contact email address',
+        },
+        phone: {
+          type: 'string',
+          description: 'Contact phone number',
+        },
+        company: {
+          type: 'string',
+          description: 'Contact company or organization',
+        },
+        notes: {
+          type: 'string',
+          description: 'Additional notes about the contact',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max results for list action (default: 50)',
+          default: 50,
+        },
+        offset: {
+          type: 'number',
+          description: 'Offset for pagination in list action (default: 0)',
+          default: 0,
+        },
+        search: {
+          type: 'string',
+          description: 'Search term to filter contacts by name, email, or company (for list action)',
+        },
+      },
+      required: ['action'],
+    },
+    annotations: {
+      title: 'Manage Contacts',
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: false,
+    },
+  },
 ];
