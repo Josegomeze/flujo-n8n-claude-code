@@ -522,7 +522,7 @@ export async function handleUpdatePartialWorkflow(
         success: false,
         error: 'Invalid input',
         details: {
-          errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+          errors: error.issues.map((e) => `${e.path.join('.')}: ${e.message}`)
         }
       };
     }
