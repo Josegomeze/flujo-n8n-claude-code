@@ -43,7 +43,8 @@ export interface FinancieraConfig {
 }
 
 export interface QuoteInput {
-  monto: number;            // D2
+  monto?: number;           // D2 (camino por monto)
+  letra?: number;           // D8 (camino por letra)
   plazo: number;            // F14 solicitado
   tipoCode: number;         // 1..7
   promotorIdx: number;      // 1..5 (Completo..Referido)
@@ -87,33 +88,52 @@ function chooseTipo(mat: number[][], tipoCode: number, promCol: number, fallback
   return fallback7 === 'row6' ? mat[5][promCol] : fallback7;
 }
 
-export function cotizarPorMonto(inp: QuoteInput, cfg: FinancieraConfig): QuoteOutput {
-  const refi = inp.refi ?? 0;
-  const terceros = inp.terceros ?? 0;
-  const tercerosM = inp.tercerosM ?? 0;
+// Tasas y cuotas resueltas (comunes a ambos caminos, monto y letra).
+interface Tasas {
+  cuotas: number;   // G14
+  Y16: number;      // interés mensual (H23)
+  H25: number;      // comisión administrativa
+  H26: number;      // comisión promotor (Y19)
+  H27: number;      // servicio (Y20)
+  H28: number;      // timbres (Y25)
+  H31: number;      // FECI (Y26)
+  H20: number;      // ITBMS (Y23)
+  H32: number;      // H26+H27+H28
+  H14: number;      // cuotas·13/12
+  AF11: number;     // factor de interés plano
+  AB19: number;     // "Referido $100"
+}
+
+// montoParaG15: valor de D2 que ve G15 (= monto en camino por monto; 0 en camino por letra).
+function resolverTasas(inp: QuoteInput, cfg: FinancieraConfig, montoParaG15: number): Tasas {
   const promCol = inp.promotorIdx - 1;
-
-  // ----- Plazo efectivo (G14/G15), sin jubilación ni pago automático -----
   const tipoMax = cfg.tipoMaxPlazo[inp.tipoCode - 1];
-  const G15 = inp.monto > 4000 ? 300 : tipoMax;          // camino Empresa Privada (G11=0)
-  const cuotas = Math.min(inp.plazo, G15);                // G14
+  // G15/G14 (sin jubilación; con Pago Automático el plazo se fuerza a 60 CSS / 72 Contraloría)
+  const G15 = inp.clave === 'G11' ? (inp.esCSS ? 60 : 72) : (montoParaG15 > 4000 ? 300 : tipoMax);
+  const cuotas = Math.min(inp.plazo, G15);
 
-  // ----- Tasas resueltas por tipo × promotor / clave -----
-  const Y16 = chooseTipo(cfg.matrizInteres, inp.tipoCode, promCol, 0.02);       // interés mensual (S53)
-  const H25 = chooseTipo(cfg.matrizGastoCierre, inp.tipoCode, promCol, 0.25);   // comisión admin (S61)
-  const S45 = chooseTipo(cfg.matrizComision, inp.tipoCode, promCol, 'row6');    // comisión promotor base (S45)
-  const H26 = (inp.promotorNoTiene ? 0 : S45) * (Math.min(cuotas, cfg.amCap) / cuotas); // Y19
-  const AB19 = inp.promotorIdx === 5 ? 100 : 0;                          // "Referido $100"
-  const H27 = servicioRate(inp, cfg);                                    // Y20
-  const H28 = cfg.timbresRate;                                           // Y25
-  const H31 = cfg.feciRate;                                              // Y26
-  const H20 = cfg.itbmsRate;                                             // Y23
-  const H32 = H26 + H27 + H28;
+  const Y16 = chooseTipo(cfg.matrizInteres, inp.tipoCode, promCol, 0.02);
+  const H25 = chooseTipo(cfg.matrizGastoCierre, inp.tipoCode, promCol, 0.25);
+  const S45 = chooseTipo(cfg.matrizComision, inp.tipoCode, promCol, 'row6');
+  const H26 = (inp.promotorNoTiene ? 0 : S45) * (Math.min(cuotas, cfg.amCap) / cuotas);
+  const H27 = servicioRate(inp, cfg);
+  const H28 = cfg.timbresRate;
+  const H31 = cfg.feciRate;
+  const H20 = cfg.itbmsRate;
   const H14 = cuotas / 12 + cuotas;
-  const AF11 = Y16 * H14;                                                // interés plano (AF10=0)
+  return {
+    cuotas, Y16, H25, H26, H27, H28, H31, H20,
+    H32: H26 + H27 + H28, H14, AF11: Y16 * H14,
+    AB19: inp.promotorIdx === 5 ? 100 : 0,
+  };
+}
 
-  // ----- Renglones (AF1 = 0: ITBMS dentro) -----
-  const F16 = xround(inp.monto, 2) - refi - terceros;                    // suma a recibir (P7 = D2)
+// Renglones desde la obligación P7 (idéntico en ambos caminos; AF1 = 0, ITBMS dentro).
+function lineasDesdeP7(P7: number, t: Tasas, inp: QuoteInput, cfg: FinancieraConfig): QuoteOutput {
+  const refi = inp.refi ?? 0, terceros = inp.terceros ?? 0, tercerosM = inp.tercerosM ?? 0;
+  const { cuotas, Y16, H25, H26, H27, H28, H31, H20, H32, H14, AF11, AB19 } = t;
+
+  const F16 = xround(P7, 2) - refi - terceros;                           // suma a recibir
   const F17 = refi, F18 = terceros, F19 = xround(tercerosM, 2);
   const F20 = xround((((F16 + F17 + F19 + F18) / (1 - (H20 * H25))) * H25) * H20, 2); // ITBMS
   const G21 = F16 + F17 + F18 + F19 + F20;                               // monto obligación neta
@@ -124,7 +144,7 @@ export function cotizarPorMonto(inp: QuoteInput, cfg: FinancieraConfig): QuoteOu
 
   const sumF16F25 = F16 + F17 + F18 + F19 + F20 + F23 + F25;
   const H33 = (sumF16F25 + F30 + F31 + AB19) / (1 - H32);                // I33 = F34 = 0
-  const F26 = xround(H33 * H26, 2) + 2 * AB19;                           // comisión promotor (+2×AB19; I33=0)
+  const F26 = xround(H33 * H26, 2) + 2 * AB19;                           // comisión promotor
   const F27 = xround(H33 * H27, 2);                                      // servicio de descuento
   const F28 = xroundup(H33 * H28, 1);                                    // timbres
 
@@ -138,6 +158,53 @@ export function cotizarPorMonto(inp: QuoteInput, cfg: FinancieraConfig): QuoteOu
     tasaInteresMensual: Y16, tasaComAdmin: H25, tasaComPromotor: H26, tasaServicio: H27,
     H32, H33, AF11,
   };
+}
+
+// Camino por MONTO: la obligación P7 = D2 (el monto solicitado).
+export function cotizarPorMonto(inp: QuoteInput, cfg: FinancieraConfig): QuoteOutput {
+  const monto = inp.monto ?? 0;
+  const t = resolverTasas(inp, cfg, monto);
+  return lineasDesdeP7(monto, t, inp, cfg);
+}
+
+// Camino por LETRA: se hace "gross-up" (M10) desde la letra quincenal deseada hasta la
+// obligación, y luego se calculan los renglones igual que en el camino por monto.
+export function cotizarPorLetra(inp: QuoteInput, cfg: FinancieraConfig): QuoteOutput {
+  const letra = inp.letra ?? 0;
+  const t = resolverTasas(inp, cfg, 0);                     // en camino por letra, D2 = 0 en G15
+  const A = letra * t.cuotas * 2 * (1 - t.H32) - cfg.notaria - t.AB19; // total a pagar objetivo, neto
+  const B1 = 1 + t.AF11 + t.H25;                            // sin FECI (obligación ≤ 5000)
+  const B2 = 1 + t.AF11 + t.H25 + t.H31 * ((t.H14 * 30) / 360); // con FECI (obligación > 5000)
+  const M10 = (A / B1 > 5000) ? A / B2 : A / B1;
+  const M9 = M10 * t.H25 * t.H20;                           // M9 = M10·Y18·H20
+  const P7 = M10 - M9;                                      // M7 = M10 - M9 (AF1 = 0), mismo orden que la hoja
+  return lineasDesdeP7(P7, t, inp, cfg);
+}
+
+// F11 — Tope de letra quincenal por salario en Pago Automático (clave G11).
+// esCSS = institución "Caja de Seguro Social" (tabla CSS); si no, tabla Contraloría.
+export function topeLetraPagoAuto(salario: number, esCSS: boolean): number {
+  if (esCSS) {
+    if (salario > 1500) return 45;
+    if (salario > 1000) return 35;
+    if (salario > 800) return 25;
+    if (salario > 700) return 20;
+    if (salario > 499.99) return 15;
+    return 0;
+  }
+  if (salario > 2500) return 99;
+  if (salario > 2400) return 95;
+  if (salario > 2200) return 90;
+  if (salario > 2000) return 85;
+  if (salario > 1900) return 75;
+  if (salario > 1700) return 70;
+  if (salario > 1500) return 65;
+  if (salario > 1400) return 60;
+  if (salario > 1200) return 55;
+  if (salario > 1000) return 50;
+  if (salario > 750) return 45;
+  if (salario > 499.99) return 35;
+  return 0;
 }
 
 function servicioRate(inp: QuoteInput, cfg: FinancieraConfig): number {

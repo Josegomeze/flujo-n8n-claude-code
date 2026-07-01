@@ -11,8 +11,11 @@ nuevo dé **exactamente lo mismo, al centavo**.
 ## Resultado de esta PoC
 
 ```
-Casos: 1050 | OK: 1050 | con alguna diferencia: 0
-✅ PARIDAD TOTAL: el motor TS coincide con la hoja en los 1050 casos (al centavo).
+Casos: 1925 | OK: 1925 | con alguna diferencia: 0
+  por monto: OK 1050 / fail 0   |   por letra: OK 875 / fail 0
+✅ PARIDAD TOTAL: el motor TS coincide con la hoja en los 1925 casos (al centavo).
+
+Tope Pago Automático (F11): 34 combinaciones | fallos: 0 ✅
 ```
 
 Todos los renglones (suma a recibir, ITBMS, intereses, comisiones, timbres,
@@ -22,30 +25,34 @@ flotante < 1e-6, muy por debajo de un centavo.
 
 ## Alcance cubierto por la PoC
 
-Camino de cotización **por monto** (el ejecutivo indica el monto):
+Ambos caminos de entrada de la cotización:
 
-- 7 tipos de cliente × 5 promotores × 6 montos × 5 plazos = **1050 combinaciones**.
-- Clave **Empresa Privada**, ITBMS **dentro** de interés/comisión, interés **plano**.
-- Resolución de tarifas por **tipo × promotor** (matrices), incluidas las reglas
-  especiales del tipo 7 y del promotor "Referido $100" (`AB19`).
-- Tope de plazo por tipo de cliente (y regla de monto > 4000).
+- **Por monto** (el ejecutivo indica el monto): 7 tipos × 5 promotores × 6 montos × 5 plazos = **1050 casos**.
+- **Por letra** (el ejecutivo indica la letra quincenal; se hace "gross-up" `M10 → M7`): 7 tipos × 5 promotores × 5 letras × 5 plazos = **875 casos**.
+- **Tope de Pago Automático por salario** (`F11`, tablas Contraloría y CSS): **34 casos** verificados aparte (`verify_tope.mjs`).
+
+En todos: clave **Empresa Privada**, ITBMS **dentro**, interés **plano**,
+resolución de tarifas por **tipo × promotor** (incluidas las reglas del tipo 7 y
+del promotor "Referido $100"), y tope de plazo por tipo de cliente.
 
 ### Aún no cubierto (siguientes fases, mismo método de paridad)
 
-- Cotización **por letra** (gross-up `M7`), topes de **Pago Automático**.
+- **Aplicación** del tope de Pago Automático (redondeo a dólar entero + tope por
+  capacidad `J13`) — ya está la tabla `F11`; falta la capa que la aplica.
 - **Jubilación** (tope de plazo por edad), **refinanciamiento** por capacidad.
 - Variante **Descuento Voluntario** (`G12`), interés **compuesto** (`AF10=1`),
   ITBMS **fuera** (`AF1=1`).
-- Otras claves de descuento (Gobierno, Jubilado, CSS…).
+- Otras claves de descuento (Gobierno, Jubilado, CSS…) en el cuerpo de la cotización.
 
 ## Archivos
 
 | Archivo | Qué hace |
 |---------|----------|
-| `engine.ts` | Motor de cálculo en TypeScript (camino por monto). Reemplaza las fórmulas. |
+| `engine.ts` | Motor de cálculo en TypeScript (caminos por monto y por letra + tope Pago Automático). |
 | `oracle.mjs` | Genera `oracle.json` manejando la hoja real (HyperFormula headless). |
-| `oracle.json` | 1050 casos `entradas → salidas` + la configuración de la financiera. |
+| `oracle.json` | 1925 casos `entradas → salidas` (monto+letra) + la configuración de la financiera. |
 | `parity.mjs` | Corre cada caso por el motor TS y compara contra la hoja, campo por campo. |
+| `verify_tope.mjs` | Verifica la tabla de tope `F11` (Pago Automático) contra la hoja. |
 
 ## Cómo ejecutarlo
 
@@ -55,8 +62,11 @@ Requiere Node 22 (soporta TypeScript por *type-stripping*).
 # (Opcional) Regenerar el oráculo desde la hoja — requiere Chromium headless:
 node oracle.mjs
 
-# Verificar la paridad del motor TS contra el oráculo:
+# Verificar la paridad del motor TS contra el oráculo (monto + letra):
 node --experimental-strip-types parity.mjs
+
+# Verificar la tabla de tope de Pago Automático (F11):
+node --experimental-strip-types verify_tope.mjs
 ```
 
 ## Por qué esto de-riesga la migración completa
