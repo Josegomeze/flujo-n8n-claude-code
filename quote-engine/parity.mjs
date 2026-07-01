@@ -1,7 +1,7 @@
 // Arnés de paridad: corre cada caso del oráculo por el motor TS y compara
 // campo por campo contra los valores de la hoja (verdad de referencia).
 import { readFileSync } from 'node:fs';
-import { cotizarPorMonto, cotizarPorLetra } from './engine.ts';
+import { cotizarPorMonto, cotizarPorLetra, cotizarPorCapacidad } from './engine.ts';
 
 const o = JSON.parse(readFileSync(new URL('./oracle.json', import.meta.url)));
 const cfg = o.config;
@@ -32,12 +32,14 @@ const MAP = [
 
 const stats = new Map(MAP.map(([f]) => [f, { maxDiff: 0, fails: 0, worst: null }]));
 let casosOK = 0, casosFail = 0;
-const porModo = { monto: { ok: 0, fail: 0 }, letra: { ok: 0, fail: 0 } };
+const porModo = { monto: { ok: 0, fail: 0 }, letra: { ok: 0, fail: 0 }, capacidad: { ok: 0, fail: 0 } };
 const ejemplosFail = [];
 
 for (const c of o.cases) {
   const mode = c.mode || 'monto';
-  const r = mode === 'letra' ? cotizarPorLetra(c.in, cfg) : cotizarPorMonto(c.in, cfg);
+  const r = mode === 'letra' ? cotizarPorLetra(c.in, cfg)
+          : mode === 'capacidad' ? cotizarPorCapacidad(c.fin, c.in, cfg)
+          : cotizarPorMonto(c.in, cfg);
   let caseOK = true;
   for (const [field, cell, tol] of MAP) {
     const got = r[field];
@@ -53,7 +55,7 @@ for (const c of o.cases) {
 }
 
 console.log(`\nCasos: ${o.cases.length} | OK: ${casosOK} | con alguna diferencia: ${casosFail}`);
-console.log(`  por monto: OK ${porModo.monto.ok} / fail ${porModo.monto.fail}   |   por letra: OK ${porModo.letra.ok} / fail ${porModo.letra.fail}\n`);
+console.log(`  monto: OK ${porModo.monto.ok}/${porModo.monto.fail}  |  letra: OK ${porModo.letra.ok}/${porModo.letra.fail}  |  capacidad: OK ${porModo.capacidad.ok}/${porModo.capacidad.fail}\n`);
 console.log('Campo                 maxDiff        fallos');
 for (const [field] of MAP) {
   const s = stats.get(field);

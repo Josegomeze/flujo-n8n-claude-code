@@ -1,78 +1,91 @@
-# Motor de cotización — Prueba de concepto (migración hoja de cálculo → TypeScript)
+# Motor de cotización — TypeScript con paridad 1:1 vs la hoja
 
-Objetivo: demostrar que el "motor" del Cotizador Fiflouu (hoy una hoja de Excel
-incrustada que corre en el navegador con **HyperFormula**, licencia GPL v3) puede
-migrarse a **código TypeScript tipado y probado**, sin cambiar los resultados.
+Reimplementación del "motor" del Cotizador Fiflouu (hoy una hoja de Excel
+incrustada que corre en el navegador con **HyperFormula**, licencia GPL v3) en
+**código TypeScript tipado y probado**, sin cambiar los resultados.
 
-La clave para migrar sin riesgo: la hoja actual sirve de **oráculo**. Se generan
-miles de casos `entradas → salidas` desde la hoja real y se verifica que el motor
-nuevo dé **exactamente lo mismo, al centavo**.
+Método (migración sin riesgo): la hoja actual es el **oráculo**. Se generan miles
+de casos `entradas → salidas` desde la hoja real (headless) y se verifica que el
+motor nuevo dé **exactamente lo mismo, al centavo**.
 
-## Resultado de esta PoC
+## Resultado
 
 ```
-Casos: 1925 | OK: 1925 | con alguna diferencia: 0
-  por monto: OK 1050 / fail 0   |   por letra: OK 875 / fail 0
-✅ PARIDAD TOTAL: el motor TS coincide con la hoja en los 1925 casos (al centavo).
-
-Tope Pago Automático (F11): 34 combinaciones | fallos: 0 ✅
+parity.mjs           : 1372/1372 cotizaciones al centavo
+                       (monto 638 · letra 638 · capacidad 96)
+verify_tope.mjs      : 34/34   tope de letra por salario (F11)
+verify_capacidad.mjs : 864/864 capacidad máxima (J13/J14)
+verify_pagoauto.mjs  : 64/64   aplicación del tope de Pago Automático
+--------------------------------------------------------------------
+TOTAL                : 2334 verificaciones, 0 diferencias
 ```
 
 Todos los renglones (suma a recibir, ITBMS, intereses, comisiones, timbres,
-notaría, FECI), el monto neto, el total a pagar y la letra quincenal coinciden
-de forma exacta. Los intermedios internos (H33) coinciden con ruido de punto
-flotante < 1e-6, muy por debajo de un centavo.
+notaría, FECI), el monto neto, el total a pagar y la letra quincenal coinciden de
+forma exacta. Los intermedios internos coinciden con ruido de punto flotante
+< 1e-6, muy por debajo de un centavo.
 
-## Alcance cubierto por la PoC
+## Alcance cubierto
 
-Ambos caminos de entrada de la cotización:
+**Los tres caminos de entrada de la cotización:**
+- **Por monto** (`D2`): el ejecutivo indica el monto.
+- **Por letra** (`D8`): indica la letra quincenal; se hace *gross-up* `M10 → M7`.
+- **Por capacidad** (`N7`): la letra sale de la capacidad máxima del cliente (`J13`).
 
-- **Por monto** (el ejecutivo indica el monto): 7 tipos × 5 promotores × 6 montos × 5 plazos = **1050 casos**.
-- **Por letra** (el ejecutivo indica la letra quincenal; se hace "gross-up" `M10 → M7`): 7 tipos × 5 promotores × 5 letras × 5 plazos = **875 casos**.
-- **Tope de Pago Automático por salario** (`F11`, tablas Contraloría y CSS): **34 casos** verificados aparte (`verify_tope.mjs`).
+**Reglas del negocio:**
+- Las **5 claves** de descuento: Empresa Privada (`G8`), Jubilado (`G9`),
+  Gobierno (`G10`), Pago Automático (`G11`, CSS y Contraloría) y Descuento
+  Voluntario (`G12`, con sus matrices de variante).
+- Resolución de **tarifas por tipo × promotor** (matrices), incluidas las reglas
+  especiales del tipo 7 y del promotor "Referido $100" (`AB19`).
+- **Toggles:** ITBMS dentro/fuera (`AF1`) e interés plano/compuesto (`AF10`).
+- **Refinanciamiento** y cancelación a terceros.
+- **Jubilación:** tope de plazo por meses hasta pensión (edad y género).
+- **Pago Automático:** tope de plazo (60 CSS / 72 Contraloría), tope de letra por
+  salario (`F11`), capacidad (`J13`) y aplicación de la letra a dólar entero.
 
-En todos: clave **Empresa Privada**, ITBMS **dentro**, interés **plano**,
-resolución de tarifas por **tipo × promotor** (incluidas las reglas del tipo 7 y
-del promotor "Referido $100"), y tope de plazo por tipo de cliente.
+### Fuera de alcance (documentado)
 
-### Aún no cubierto (siguientes fases, mismo método de paridad)
+- Ruta de **seguro** (`G19="Si"`, filas `M2/M3/O2/O3`) — no habitual.
+- Regla de **anulación** de la cotización (cuotas < 1 o letra < 5 → todo en cero):
+  es un guardado de presentación en la UI, no del cálculo.
 
-- **Aplicación** del tope de Pago Automático (redondeo a dólar entero + tope por
-  capacidad `J13`) — ya está la tabla `F11`; falta la capa que la aplica.
-- **Jubilación** (tope de plazo por edad), **refinanciamiento** por capacidad.
-- Variante **Descuento Voluntario** (`G12`), interés **compuesto** (`AF10=1`),
-  ITBMS **fuera** (`AF1=1`).
-- Otras claves de descuento (Gobierno, Jubilado, CSS…) en el cuerpo de la cotización.
+## Contrato del cliente
+
+Los únicos datos crudos del cliente (de `DATOS`) que consume el motor son:
+`salario` (F2), `descComercial` (F3), `claveN147` (F4), `embargos` (F5) y
+`descontable` (F6). Todo lo demás es lógica derivada, portada y verificada.
 
 ## Archivos
 
 | Archivo | Qué hace |
 |---------|----------|
-| `engine.ts` | Motor de cálculo en TypeScript (caminos por monto y por letra + tope Pago Automático). |
+| `engine.ts` | Motor de cálculo en TypeScript (monto / letra / capacidad + Pago Automático). |
 | `oracle.mjs` | Genera `oracle.json` manejando la hoja real (HyperFormula headless). |
-| `oracle.json` | 1925 casos `entradas → salidas` (monto+letra) + la configuración de la financiera. |
-| `parity.mjs` | Corre cada caso por el motor TS y compara contra la hoja, campo por campo. |
-| `verify_tope.mjs` | Verifica la tabla de tope `F11` (Pago Automático) contra la hoja. |
+| `oracle.json` | Casos `entradas → salidas` + la configuración de la financiera. |
+| `parity.mjs` | Compara el motor contra el oráculo, campo por campo. |
+| `verify_tope.mjs` | Verifica el tope `F11` (Pago Automático). |
+| `verify_capacidad.mjs` | Verifica la capacidad `J13/J14`. |
+| `verify_pagoauto.mjs` | Verifica la aplicación del tope de Pago Automático. |
 
 ## Cómo ejecutarlo
 
-Requiere Node 22 (soporta TypeScript por *type-stripping*).
+Requiere Node 22 (TypeScript por *type-stripping*).
 
 ```bash
 # (Opcional) Regenerar el oráculo desde la hoja — requiere Chromium headless:
 node oracle.mjs
 
-# Verificar la paridad del motor TS contra el oráculo (monto + letra):
+# Verificaciones:
 node --experimental-strip-types parity.mjs
-
-# Verificar la tabla de tope de Pago Automático (F11):
 node --experimental-strip-types verify_tope.mjs
+node --experimental-strip-types verify_capacidad.mjs
+node --experimental-strip-types verify_pagoauto.mjs
 ```
 
-## Por qué esto de-riesga la migración completa
+## Siguiente paso
 
-Cada fase futura (letra, pago automático, jubilación, API, base de datos, nodo
-n8n) se construye igual: se amplía el oráculo con esos escenarios y no se da por
-buena ninguna parte hasta que el motor coincide con la hoja al centavo. Así la
-migración es **incremental y verificable**, sin sorpresas para las cotizaciones
-reales.
+El motor de cálculo está completo y verificado. Lo que sigue es empaquetarlo como
+**servicio/API** (Node/TypeScript) con los datos en **base de datos** (en vez de
+incrustados) y, si se desea, exponerlo como **nodo n8n** — sin volver a tocar la
+lógica de cálculo, ya probada al centavo.
