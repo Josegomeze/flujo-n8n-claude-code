@@ -64,6 +64,35 @@ const html = `<!doctype html>
   .adminbox h2{color:var(--naranja);border-color:#f0c9b0}
   textarea{width:100%;font-family:ui-monospace,monospace;font-size:11px;border:1px solid #cdd8dc;border-radius:8px;padding:8px;min-height:120px}
   .note{font-size:11.5px;color:var(--gris);margin:4px 0 0}
+  /* ---- presentación de la cotización (como el original) ---- */
+  #cotHeader{margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #16615f}
+  .coth-name{font-size:19px;font-weight:800;color:#0f3d3e;letter-spacing:.2px}
+  .coth-sub{font-size:12px;color:#6b8088;margin-top:2px}
+  .coth-fin{font-size:11.5px;font-weight:700;color:#9a3412;background:#fff3e9;border:1px solid #f0c9a8;border-radius:6px;padding:2px 8px;display:inline-block;margin-top:6px}
+  #cotSummary{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:16px}
+  .sumcard{background:linear-gradient(135deg,#f1f7f6,#e8f2f0);border:1px solid #cfe3df;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+  .sumcard .sl{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#5a7882;font-weight:600}
+  .sumcard .sv{font-size:19px;font-weight:800;color:#0f3d3e;font-variant-numeric:tabular-nums}
+  .sumcard.txt .sv{font-size:14px;line-height:1.25}
+  table#cotWf{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+  table#cotWf col.c-v1,table#cotWf col.c-v2,table#cotWf col.c-v3{width:92px}
+  table#cotWf thead th{background:#5bbcae;color:#fff;font-size:11px;font-weight:700;text-align:right;padding:6px 9px}
+  table#cotWf thead th.h-i{text-align:left}
+  table#cotWf td{padding:3px 9px;border-bottom:1px solid #eef3f4;vertical-align:baseline}
+  table#cotWf td.i{color:#3c5560;text-align:left}
+  table#cotWf td.i.r{text-align:right;font-weight:700;color:#16615f}
+  table#cotWf td.v{text-align:right;font-variant-numeric:tabular-nums;color:#0f3d3e;font-weight:600}
+  table#cotWf tr.wf-major td{border-top:1px solid #cfe3df;border-bottom:1px solid #cfe3df;background:#f6fbfa}
+  table#cotWf tr.wf-major td.i{color:#16615f;font-weight:800;font-size:13px}
+  table#cotWf tr.wf-major td.v{font-weight:800;font-size:13.5px;color:#0f3d3e}
+  table#cotWf tr.wf-midtot td.i{font-weight:700;color:#2a5d63}
+  table#cotWf tr.wf-grp td{font-weight:600;color:#46606b;padding-top:4px}
+  table#cotWf tr.wf-det td.i{padding-left:14px}
+  table#cotWf tr.wf-fin td{background:#16615f;color:#fff;border:none;padding:7px 9px}
+  table#cotWf tr.wf-fin td.i{color:#fff;font-weight:800;font-size:13px}
+  table#cotWf tr.wf-fin td.v{color:#fff;font-weight:800;font-size:14px}
+  .wf-flag{display:inline-block;font-size:9.5px;font-weight:700;color:#9b6a00;background:#fff4d6;border:1px solid #f0d699;border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:middle}
+  .wf-note{font-size:11px;color:#6b8088;margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -117,11 +146,14 @@ const html = `<!doctype html>
     </div>
   </div>
   <div class="card">
-    <h2>Resultado</h2>
-    <div class="sub">Letra quincenal</div><div class="letra" id="r_letra">—</div>
-    <div class="sub" id="r_cuotas"></div>
-    <table id="r_tabla"></table>
-    <div class="tasas" id="r_tasas"></div>
+    <div id="cotHeader"></div>
+    <div id="cotSummary"></div>
+    <table id="cotWf">
+      <colgroup><col class="c-i"><col class="c-v1"><col class="c-v2"><col class="c-v3"></colgroup>
+      <thead><tr><th class="h-i">Detalle de la cotización</th><th>Detalle</th><th>Subtotal</th><th>Total</th></tr></thead>
+      <tbody id="cotWfBody"></tbody>
+    </table>
+    <div class="wf-note" id="cotNote"></div>
   </div>
 </div></div>
 
@@ -195,18 +227,48 @@ function calcular(){
     if(modo==='monto'){ inp.monto=+$('monto').value; r=cotizarPorMonto(inp,CFG); }
     else if(modo==='letra'){ inp.letra=+$('letra').value; r=cotizarPorLetra(inp,CFG); }
     else { const f={salario:+$('c_sal').value,descComercial:+$('c_desc').value,claveN147:+$('c_n147').value,embargos:+$('c_emb').value,descontable:+$('c_descontable').value}; r=cotizarPorCapacidad(f,inp,CFG); }
-  }catch(e){ $('r_letra').textContent='—'; return; }
-  $('r_letra').textContent=money(r.letraQuincenal);
-  $('r_cuotas').textContent=r.cuotas+' cuotas · '+(r.cuotas*2)+' quincenas';
-  const rows=[['mayor','Monto Total de Obligación',r.totalPagar],['','Menos Intereses',r.interes],
-    ['','Gastos Notariales',r.notaria],['','FECI',r.feci],['','ITBMS',r.itbms],
-    ['','Servicio de Descuento',r.servicioDescuento],['','Comisión Promotor',r.comisionPromotor],
-    ['','Comisión Administrativa',r.comisionAdmin],['','Timbres',r.timbres],
-    ['mayor','Monto Obligación Neta',r.montoNeta],['','Menos Refinanciamiento',inp.refi||0],
-    ['','Cancelación a Terceros',inp.terceros||0],['fin','Monto Recibido en Mano',r.sumaARecibir]];
-  $('r_tabla').innerHTML=rows.map(([c,l,v])=>'<tr class="'+c+'"><td>'+l+'</td><td class="v">'+money(v)+'</td></tr>').join('');
-  $('r_tasas').innerHTML='<span>Interés: <b>'+pct(r.tasaInteresMensual)+'</b></span><span>Com. admin: <b>'+pct(r.tasaComAdmin)+'</b></span><span>Com. promotor: <b>'+pct(r.tasaComPromotor)+'</b></span><span>Servicio: <b>'+pct(r.tasaServicio)+'</b></span>';
+  }catch(e){ $('cotWfBody').innerHTML=''; $('cotSummary').innerHTML=''; return; }
+  // ---- presentación como el original: encabezado + tarjetas + tabla cascada ----
+  const anular=(r.cuotas<1)||(r.letraQuincenal<5); const Z=v=>anular?0:v;
+  $('cotHeader').innerHTML='<div class="coth-name">Cotización</div>'
+    +'<div class="coth-sub">'+tipoNombre(inp.tipoCode)+' · '+PROMS[inp.promotorIdx]+' · '+CLAVES[inp.clave]+'</div>'
+    +'<div class="coth-fin">Financiera '+ACT+(inp.clave==='G11'?(inp.esCSS?' · Pago Automático CSS':' · Pago Automático Contraloría'):'')+'</div>';
+  $('cotSummary').innerHTML =
+      sumCardText('Cuotas', anular?'—':(r.cuotas+' meses · '+(r.cuotas*2)+' quincenas'))
+    + sumCard('Letra quincenal', Z(r.letraQuincenal))
+    + sumCard('Suma a recibir', Z(r.sumaARecibir))
+    + sumCard('Total a pagar', Z(r.totalPagar))
+    + sumCardText('Tipo de cliente', tipoNombre(inp.tipoCode))
+    + sumCardText('Clave de descuento', CLAVES[inp.clave]);
+  const pct2 = x => (Number(x)*100).toLocaleString('es-PA',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+  const rows=[];
+  const major=(l,v)=>rows.push('<tr class="wf-major"><td class="i r">'+l+'</td><td></td><td></td><td class="v">'+money(v)+'</td></tr>');
+  const mid  =(l,v)=>rows.push('<tr class="wf-mid"><td class="i">'+l+'</td><td></td><td class="v">'+money(v)+'</td><td></td></tr>');
+  const midT =(l,v)=>rows.push('<tr class="wf-midtot"><td class="i r">'+l+'</td><td></td><td class="v">'+money(v)+'</td><td></td></tr>');
+  const det  =(l,v)=>rows.push('<tr class="wf-det"><td class="i">'+l+'</td><td class="v">'+money(v)+'</td><td></td><td></td></tr>');
+  const grp  =(l)=>rows.push('<tr class="wf-grp"><td class="i" colspan="4">'+l+'</td></tr>');
+  const finr =(l,v)=>rows.push('<tr class="wf-fin"><td class="i r">'+l+'</td><td class="v">'+money(v)+'</td><td></td><td></td></tr>');
+  const totalCierre = Z(r.servicioDescuento)+Z(r.comisionPromotor)+Z(r.comisionAdmin)+Z(r.timbres);
+  major('Monto Total de Obligación', Z(r.totalPagar));
+  mid('FECI', Z(r.feci));
+  mid('Gastos Notariales', Z(r.notaria));
+  mid('Menos Intereses — '+pct2(r.tasaInteresMensual), Z(r.interes));
+  if(inp.itbmsFuera) mid('ITBMS <span class="wf-flag">FUERA</span>', Z(r.itbms));
+  det('Servicio de Descuento', Z(r.servicioDescuento));
+  det('Comisión Promotor', Z(r.comisionPromotor));
+  det('Gastos Administrativos '+pct2(r.tasaComAdmin), Z(r.comisionAdmin));
+  det('Timbres', Z(r.timbres));
+  midT('Total Comisión de Cierre '+pct2(r.montoNeta?totalCierre/r.montoNeta:0), totalCierre);
+  major('Monto Obligación Neta', Z(r.montoNeta));
+  det('Menos Refinanciamiento', Z(inp.refi||0));
+  if((inp.terceros||0)>0){ grp('Cancelaciones'); det('&nbsp;&nbsp;Cancelación a Terceros', Z(inp.terceros)); }
+  if(!inp.itbmsFuera) det('ITBMS', Z(r.itbms));
+  finr('Monto Recibido en Mano', Z(r.sumaARecibir));
+  $('cotWfBody').innerHTML=rows.join('');
+  $('cotNote').textContent = anular ? 'Cotización anulada: las cuotas son menores a 1 o la letra es menor a $5.' : '';
 }
+function sumCard(t,v){return '<div class="sumcard"><span class="sl">'+t+'</span><span class="sv">'+money(v)+'</span></div>';}
+function sumCardText(t,v){return '<div class="sumcard txt"><span class="sl">'+t+'</span><span class="sv">'+(v||'—')+'</span></div>';}
 
 // -------- Parámetros financiera (edita CFG global) --------
 const PROM_COLS=['Completo','Media','Baja','Sin Com.','Referido'];
