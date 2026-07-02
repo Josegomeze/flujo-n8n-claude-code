@@ -122,7 +122,8 @@ interface Tasas {
 // y por el máximo por tipo/pago-automático (G15).
 function calcCuotas(inp: QuoteInput, cfg: FinancieraConfig, montoParaG15: number): number {
   const tipoMax = cfg.tipoMaxPlazo[inp.tipoCode - 1];
-  const G15 = inp.clave === 'G11' ? (inp.esCSS ? 60 : 72) : (montoParaG15 > 4000 ? 300 : tipoMax);
+  // Pago Automático: CSS máx 48 meses (decisión de negocio), Contraloría 72.
+  const G15 = inp.clave === 'G11' ? (inp.esCSS ? 48 : 72) : (montoParaG15 > 4000 ? 300 : tipoMax);
   let base = inp.plazo;
   if (cfg.jubilaAplica) {
     const retAge = inp.genero === 'Femenino' ? cfg.edadJubMujer : cfg.edadJubHombre;

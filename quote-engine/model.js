@@ -164,7 +164,9 @@
       for (let r = 55; r <= 62; r++) { const b = rawA1('Motor', 'B' + r); if (b != null && eqs(b, key)) return num(rawA1('Motor', 'C' + r)); }
       throw { __err: ERRV('#N/A') }; });
     defC('S21', () => { const j = Math.trunc(cn('J2')); if (j < 1 || j > 7) throw { __err: ERRV('#NUM!') }; return cn('R' + (20 + j)); });
-    defC('G15', () => claveOn('G11') ? (esCSS() ? 60 : 72) : (cn('D2') > 4000 ? 300 : cn('S21')));
+    // Pago Automático: CSS máx 48 meses (decisión de negocio; antes 60 en la hoja,
+    // aunque la app ya forzaba 48), Contraloría 72.
+    defC('G15', () => claveOn('G11') ? (esCSS() ? 48 : 72) : (cn('D2') > 4000 ? 300 : cn('S21')));
     defC('G14', () => { const f14 = cn('F14');
       const inner = eqs(C('J6'), 'SI') ? (xtrunc(cn('I6'), 0) > f14 ? f14 : xtrunc(cn('I6'), 0)) : f14;
       const g15 = cn('G15'); return inner > g15 ? g15 : inner; });
