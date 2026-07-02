@@ -170,7 +170,26 @@
     defC('G14', () => { const f14 = cn('F14');
       const inner = eqs(C('J6'), 'SI') ? (xtrunc(cn('I6'), 0) > f14 ? f14 : xtrunc(cn('I6'), 0)) : f14;
       const g15 = cn('G15'); return inner > g15 ? g15 : inner; });
-    defC('H14', () => cn('G14') / 12 + cn('G14'));
+    // H14 — meses de interés = cuotas + diciembres saltados del cronograma REAL
+    // (igual que el sistema web y el cronograma de pagos: quincenas desde el primer
+    // pago Motor!J12; diciembre no se paga, salvo Pago Automático CSS).
+    // Respaldo: aproximación G14·13/12 si aún no hay fecha de primer pago.
+    defC('H14', () => {
+      const g14 = cn('G14');
+      let firstS = 0; try { firstS = mn('J12'); } catch (e) { firstS = 0; }
+      if (!(firstS > 0) || !(g14 > 0)) return g14 / 12 + g14;
+      const exentoDic = claveOn('G11') && esCSS();
+      const nPag = Math.round(g14 * 2);
+      const d0 = new Date(EPOCH + Math.round(firstS) * 86400000);
+      let mm = d0.getUTCMonth(), curII = d0.getUTCDate() > 15;
+      let placed = 0, nDic = 0, guard = 0;
+      while (placed < nPag && guard++ < 4000) {
+        if (mm === 11 && !exentoDic) { nDic++; }
+        else { placed += curII ? 1 : 2; }
+        curII = false; mm++; if (mm > 11) mm = 0;
+      }
+      return g14 + nDic;
+    });
 
     // --- Tarifas por tipo × promotor ---
     defC('S37', () => claveOn('G12') ? C('S86') : chooseTipo(37, { row: 43 }));
