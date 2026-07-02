@@ -283,7 +283,7 @@ table#cotWf tr.wf-fin td.v{color:#fff;font-weight:800;font-size:14px}
   'use strict';
   const EPOCH = Date.UTC(1899, 11, 30);
   const todaySerial = () => { const d = new Date(); return Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - EPOCH) / 86400000); };
-  const ERRV = (s) => ({ value: s });
+  const ERRV = (s) => ({ value: s, toString() { return s; } });
   const isE = (v) => v && typeof v === 'object' && typeof v.value === 'string' && v.value[0] === '#';
   // Redondeo estilo Excel (mitad hacia afuera; DOWN/TRUNC hacia cero; UP alejándose de cero)
   const xround = (x, d) => { if (!isFinite(x)) return x; const f = Math.pow(10, d); return Math.sign(x) * Math.floor(Math.abs(x) * f + 0.5) / f; };
@@ -374,7 +374,7 @@ table#cotWf tr.wf-fin td.v{color:#fff;font-weight:800;font-size:14px}
     defM('B4', () => dlook(C('F1'), 3));
     defM('B5', () => dlook(C('F1'), 1));
     defM('B6', () => dlook(C('F1'), 11));
-    defC('B10', () => { const a = M('B3'), b = M('B4'); return (isE(a) ? '' : (a == null ? '' : String(a))) + ' ' + (isE(b) ? '' : (b == null ? '' : String(b))); });
+    defC('B10', () => { const a = E(M('B3')), b = E(M('B4')); return (a == null ? '' : String(a)) + ' ' + (b == null ? '' : String(b)); });
     defM('B26', () => C('B11'));
     defM('C26', () => { // VLOOKUP(B26, Motor!B65:E141, 4, FALSE)
       const key = E(M('B26')); const kUp = typeof key === 'string' ? key.toUpperCase() : key;
