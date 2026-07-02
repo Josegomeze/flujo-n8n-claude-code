@@ -79,11 +79,12 @@
       if (!col) throw { __err: ERRV('#NUM!') };
       return num(C(col + n));   // via V: N88 es calculada
     }
-    // Selector por tipo: CHOOSE(J2, filas r0..r0+5, séptimo)
+    // Selector por tipo: filas r0..r0+5 = tipos 1..6; el tipo 7 (Eventual) usa un
+    // literal o una fila auxiliar propia ({row:n}), según la matriz.
     function chooseTipo(r0, seventh) {
       const j = cn('J2'); const k = Math.trunc(j);
       if (k >= 1 && k <= 6) return Rrow(r0 + k - 1);
-      if (k === 7) return (seventh === 'last') ? Rrow(r0 + 5) : seventh;
+      if (k === 7) return (typeof seventh === 'number') ? seventh : Rrow(seventh.row);
       throw { __err: ERRV('#NUM!') };
     }
     const claveOn = (g) => cn(g) > 0;
@@ -170,15 +171,14 @@
     defC('H14', () => cn('G14') / 12 + cn('G14'));
 
     // --- Tarifas por tipo × promotor ---
-    defC('S37', () => claveOn('G12') ? C('S86') : chooseTipo(37, 'last'));
-    defC('S45', () => claveOn('G12') ? C('S94') : chooseTipo(45, 'last'));
+    defC('S37', () => claveOn('G12') ? C('S86') : chooseTipo(37, { row: 43 }));
+    defC('S45', () => claveOn('G12') ? C('S94') : chooseTipo(45, { row: 52 }));
     defC('S53', () => claveOn('G12') ? C('S102') : chooseTipo(53, 0.02));
     defC('S61', () => claveOn('G12') ? C('S110') : chooseTipo(61, 0.25));
-    defC('S86', () => chooseTipo(86, 'last'));
-    defC('S94', () => chooseTipo(94, 'last'));
+    defC('S86', () => chooseTipo(86, { row: 92 }));
+    defC('S94', () => chooseTipo(94, { row: 100 }));
     defC('S102', () => chooseTipo(102, 0.02));
     defC('S110', () => chooseTipo(110, 0.25));
-    defC('N88', () => cn('N37') / cn('L37') * cn('L88'));
     defC('Y16', () => C('S53'));
     defC('Y18', () => C('S61'));
     defC('Y19', () => { const s45 = eqs(M('B6'), 'No tiene') ? 0 : num(C('S45'));
