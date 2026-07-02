@@ -37,7 +37,7 @@ a) Abre https://zonasegura.financieralaprosperidad.app/patrono_categories y
    https://zonasegura.financieralaprosperidad.app/tabla_matrices (solo ver).
 b) En el v79 abre "⚙ Ver / editar Parámetros financiera" y la pestaña
    "Tablas (ref)" de la sección avanzada.
-c) Compara y muestra una tabla de verificación (parámetro | web | v78 | ¿igual?):
+c) Compara y muestra una tabla de verificación (parámetro | web | v79 | ¿igual?):
    - Matrices tarifarias por tipo de cliente × promotor: comisión, interés y
      gasto de cierre / comisión administrativa (en %).
    - Plazo máximo por tipo de cliente.
@@ -65,7 +65,7 @@ Para CADA cotización copia (léelo del detalle, no calcules nada):
    monto obligación neta, total a pagar, intereses, comisión administrativa,
    comisión promotor, servicio de descuento, timbres, FECI, ITBMS, notaría.
 
-PASO 3 — REPRODUCIR CADA CASO EN EL v78 (aquí SÍ calculas):
+PASO 3 — REPRODUCIR CADA CASO EN EL v79 (aquí SÍ calculas):
 Para cada uno de los 10 casos, en el HTML v79:
    a) Si la cédula existe en el selector, selecciónala. Si no, usa "➕ Agregar
       cliente" con el salario, descuentos, institución y tipo de cliente del caso.
