@@ -182,13 +182,16 @@
       const nPag = Math.round(g14 * 2);
       const d0 = new Date(EPOCH + Math.round(firstS) * 86400000);
       let mm = d0.getUTCMonth(), curII = d0.getUTCDate() > 15;
-      let placed = 0, nDic = 0, guard = 0;
+      let placed = 0, meses = 0, guard = 0;
+      // meses de financiamiento = meses CALENDARIO del cronograma (como el portal):
+      // incluye el mes inicial parcial (primer pago en 2ª quincena) y los diciembres.
       while (placed < nPag && guard++ < 4000) {
-        if (mm === 11 && !exentoDic) { nDic++; }
+        meses++;
+        if (mm === 11 && !exentoDic) { /* diciembre: no se paga */ }
         else { placed += curII ? 1 : 2; }
         curII = false; mm++; if (mm > 11) mm = 0;
       }
-      return g14 + nDic;
+      return meses;
     });
 
     // --- Tarifas por tipo × promotor ---
