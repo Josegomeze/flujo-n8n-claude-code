@@ -183,8 +183,14 @@
       const d0 = new Date(EPOCH + Math.round(firstS) * 86400000);
       let mm = d0.getUTCMonth(), curII = d0.getUTCDate() > 15;
       let placed = 0, meses = 0, guard = 0;
-      // meses de financiamiento = meses CALENDARIO del cronograma (como el portal):
-      // incluye el mes inicial parcial (primer pago en 2ª quincena) y los diciembres.
+      // meses de financiamiento = meses CALENDARIO desde el mes siguiente a la
+      // cotización hasta el último pago (como el portal): incluye los meses de
+      // "hueco" hasta el primer pago, el mes inicial parcial (primer pago en 2ª
+      // quincena) y los diciembres saltados.
+      const dHoy = new Date(EPOCH + todaySerial() * 86400000);
+      const idx = (y, m) => y * 12 + m;
+      const huecos = Math.max(0, idx(d0.getUTCFullYear(), d0.getUTCMonth()) - idx(dHoy.getUTCFullYear(), dHoy.getUTCMonth()) - 1);
+      meses += huecos;
       while (placed < nPag && guard++ < 4000) {
         meses++;
         if (mm === 11 && !exentoDic) { /* diciembre: no se paga */ }
@@ -280,8 +286,18 @@
     defC('F23', () => xdown(cn('AF11') * cn('G21'), 2));
     defC('F25', () => xround(cn('G21') * cn('H25'), 2));
     defC('F31', () => xround(cn('G21') > 5000 ? cn('G21') * cn('H31') * ((cn('H14') * 30) / 360) : 0, 2));
+    // Notaría: en cotización POR LETRA es el residual de reconciliación (como el
+    // portal): total = letra × cuotas × 2 exacto, y la notaría absorbe los centavos
+    // de redondeo (flexiona alrededor de la base). En monto/capacidad: base fija.
+    const notariaBase = () => num(rawA1('Calculadora', 'F30'));
+    defC('F30', () => {
+      if (!(cn('D8') > 0)) return notariaBase();
+      const target = xround(cn('D8') * cn('G14') * 2, 2);
+      const resto = cn('F16') + cn('F17') + cn('F18') + cn('F19') + cn('F20') + cn('F23') + cn('F25') + cn('F26') + cn('F27') + cn('F28') + cn('F31');
+      return xround(target - resto, 2);
+    });
     defC('H33', () => { const sum = cn('F16') + cn('F17') + cn('F18') + cn('F19') + cn('F20') + cn('F23') + cn('F25');
-      return (sum - (cn('AF1') === 1 ? cn('F20') : 0) + cn('F30') + cn('F31') + cn('AB19')) / (1 - cn('H32')); });
+      return (sum - (cn('AF1') === 1 ? cn('F20') : 0) + notariaBase() + cn('F31') + cn('AB19')) / (1 - cn('H32')); });
     defC('I33', () => C('F34'));
     defC('F26', () => (xround(cn('H33') * cn('H26'), 2) + cn('AB19')) - cn('I33') + cn('AB19'));
     defC('F27', () => xround(cn('H33') * cn('H27'), 2));
@@ -332,7 +348,9 @@
         const v = Array.isArray(content) ? content[0][0] : content;
         const sh = names[sheet]; const g = grid[sh]; if (!g[row]) g[row] = []; g[row][col] = v;
         const k = sh + '!' + colLetter(col) + (row + 1);
-        if (F[k]) overrides.add(k);   // pisa la celda calculada, como en la hoja
+        // F30 (notaría) no se pisa: el panel edita la BASE (valor crudo) y la
+        // reconciliación por letra sigue operando sobre esa base.
+        if (F[k] && k !== 'Calculadora!F30') overrides.add(k);   // pisa la celda calculada, como en la hoja
         cache = new Map();
       },
       getCellSerialized: ({ sheet, col, row }) => { const v = raw(names[sheet], col, row); return v === undefined ? null : v; },
