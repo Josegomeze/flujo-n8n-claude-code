@@ -1,128 +1,82 @@
-# Instrucciones para Cowork — Comparar el sistema web vs el Cotizador HTML v84
+# Instrucciones para Cowork — Extracción única del portal (parámetros + cotizaciones vigentes)
 
-**Objetivo:** verificar que el sistema web (`zonasegura.financieralaprosperidad.app`) y el
-Cotizador HTML v84 producen **los mismos resultados**, copiando 10 cotizaciones reales
-(lo más dispares posible) del sistema web y reproduciéndolas en el v84.
+**Nueva estrategia:** en lugar de comparar 10 casos por ronda, Cowork hace UNA
+extracción completa: (A) todos los parámetros de la financiera y (B) todas las
+cotizaciones vigentes (ya validadas). Con esos dos archivos, los ajustes del
+cotizador HTML se hacen localmente, sin volver a consultar el portal.
 
----
-
-## Preparación (antes de pegar el prompt)
-
-1. Adjunta a la sesión de Cowork el archivo **`Cotizador_Fiflouu__web__v84.html`**.
-2. Asegúrate de estar **logueado** en `zonasegura.financieralaprosperidad.app` en el
-   navegador conectado a Cowork.
+**Preparación:** estar logueado en `zonasegura.financieralaprosperidad.app` en el
+navegador conectado a Cowork. No hace falta adjuntar el HTML (esta corrida es
+solo extracción, no comparación).
 
 ---
 
 ## PROMPT LISTO PARA PEGAR EN COWORK
 
 ```
-Vas a comparar dos sistemas de cotización. Sigue estas reglas y pasos AL PIE DE LA LETRA.
+Vas a hacer una EXTRACCIÓN DE DATOS del portal. Reglas obligatorias:
 
-REGLAS OBLIGATORIAS (no negociables):
-1. En https://zonasegura.financieralaprosperidad.app/ SOLO PUEDES VER. Prohibido:
-   crear cotizaciones nuevas, guardar, editar, borrar o enviar cualquier formulario.
-   No entres a "nueva cotización" ni hagas clic en botones de acción. Solo navegar
-   listas y abrir detalles para leer.
-2. TODOS los cálculos se hacen ÚNICAMENTE en el archivo adjunto
-   Cotizador_Fiflouu__web__v84.html (ábrelo en el navegador).
-3. En el v84 verifica antes de cotizar: el botón de método debe decir
-   "Interés: agregado" (NO "sobre saldo") y el toggle de ITBMS fuera debe estar
-   DESACTIVADO (el ITBMS se financia dentro). Son los valores por defecto; no los cambies.
-4. No modifiques parámetros de la financiera en el v84. Si en el PASO 1 encuentras
-   diferencias de parámetros, DETENTE y repórtamelas antes de continuar.
+1. En https://zonasegura.financieralaprosperidad.app/ SOLO PUEDES VER. Prohibido
+   crear, guardar, editar, borrar o enviar cualquier formulario. Solo navegar y leer.
+2. NO calcules, NO interpretes, NO traduzcas nombres: copia los valores y los
+   nombres EXACTAMENTE como los muestra el portal (nomenclatura literal de
+   productos, categorías, columnas y rubros). Si un campo no está visible,
+   déjalo vacío y anótalo en las notas.
+3. Números en formato plano: punto decimal, sin separador de miles, sin "$".
 
-PASO 1 — VERIFICAR QUE AMBOS SISTEMAS USAN LOS MISMOS PARÁMETROS:
-a) Abre https://zonasegura.financieralaprosperidad.app/patrono_categories y
-   https://zonasegura.financieralaprosperidad.app/tabla_matrices (solo ver).
-b) En el v84 abre "⚙ Ver / editar Parámetros financiera" y la pestaña
-   "Tablas (ref)" de la sección avanzada.
-c) Compara y muestra una tabla de verificación (parámetro | web | v84 | ¿igual?):
-   - Matrices tarifarias por tipo de cliente × promotor: comisión, interés y
-     gasto de cierre / comisión administrativa (en %).
-   - Plazo máximo por tipo de cliente.
-   - Umbral / categorías de patrono (porcentaje, meses, meses máx por clave).
-   - ITBMS, FECI, timbres, notaría, piso de letra.
-   - Topes de Pago Automático por salario (Contraloría y CSS).
-d) Si TODO coincide, continúa. Si algo difiere, repórtalo y espera mi confirmación.
+ENTREGABLE A — PARAMETROS_PORTAL.md
+a) Catálogo de productos/claves: lista EXACTA de los productos que ofrece el
+   portal para cotizar (los nombres tal cual aparecen en el selector o listado).
+b) https://zonasegura.financieralaprosperidad.app/patrono_categories:
+   la tabla COMPLETA, todas las filas y columnas, con los encabezados exactos.
+c) https://zonasegura.financieralaprosperidad.app/tabla_matrices:
+   TODAS las tablas/productos completos, celda por celda, con encabezados exactos
+   de fila y columna (incluye todas las columnas: comision, costo, interés,
+   manejo, y cualquier otra). No omitas ningún producto (incluido Pago Voluntario).
+d) Lista de cualquier otra pantalla de configuración visible (servicio, notaría,
+   timbres, FECI, ITBMS, topes) con sus valores; si no existe, indícalo.
 
-PASO 2 — COPIAR 10 COTIZACIONES REALES, LO MÁS DISPARES POSIBLE:
-Abre https://zonasegura.financieralaprosperidad.app/quotes (solo ver) y elige 10
-cotizaciones que cubran la mayor variedad:
-   - Distintas claves/categorías: Empresa Privada, Gobierno, Jubilado,
-     Pago Automático Contraloría, Pago Automático CSS, Descuento Voluntario.
-   - Distintos tipos de cliente (al menos 4 diferentes).
-   - Montos chico (<$1,500), mediano y grande (>$8,000).
-   - Plazos corto (≤24) y largo (≥60).
-   - Al menos una por MONTO y una por LETRA solicitada.
-   - Si existen: una con refinanciamiento y una con cancelación a terceros.
-   - Distintos promotores (Completo / Media / Baja / Sin Comisión / Referido $100).
-Para CADA cotización copia (léelo del detalle, no calcules nada):
-   ENTRADAS: identificador y fecha de la cotización, cédula/cliente, salario y
-   descuentos del cliente, institución/patrono, tipo de cliente, promotor,
-   monto solicitado O letra solicitada, plazo, refinanciamiento, cancelación a terceros.
-   RESULTADOS DEL SISTEMA WEB: cuotas, letra quincenal, suma a recibir,
-   monto obligación neta, total a pagar, intereses, comisión administrativa,
-   comisión promotor, servicio de descuento, timbres, FECI, ITBMS, notaría.
+ENTREGABLE B — COTIZACIONES_VIGENTES.csv
+De https://zonasegura.financieralaprosperidad.app/quotes recorre el listado
+(todas las páginas) y extrae TODAS las cotizaciones VIGENTES (estados que
+signifiquen válida/activa; indica qué estados incluiste). Una fila por
+cotización, con estas columnas (deja vacío lo que no aplique):
 
-PASO 3 — REPRODUCIR CADA CASO EN EL v84 (aquí SÍ calculas):
-Para cada uno de los 10 casos, en el HTML v84:
-   a) Si la cédula existe en el selector, selecciónala. Si no, usa "➕ Agregar
-      cliente" con el salario, descuentos, institución y tipo de cliente del caso.
-   b) Selecciona la clave de descuento, el promotor y el tipo de cliente del caso.
-   c) Ingresa monto O letra (según cómo se hizo en la web), plazo,
-      refinanciamiento y cancelación a terceros.
-   d) Confirma: "Interés: agregado" e ITBMS financiado (toggle fuera = OFF).
-   e) Lee los resultados de la cotización del v84.
+id, fecha, estado, producto (nombre exacto del portal), patrono/institucion,
+categoria_patrono, tipo_cliente/tarifa, promotor, salario_cliente,
+descuentos_cliente, modo (monto o letra), monto_solicitado, letra_solicitada,
+plazo_cuotas, meses_financiamiento, primer_pago, ultimo_pago,
+refinanciamiento, cancelacion_terceros, acreedor,
+letra_quincenal, total_pagar, intereses, feci, notaria, servicio_descuento,
+comision_promotor, comision_admin_manejo, timbres, obligacion_neta, itbms,
+recibido_en_mano, tir
 
-PASO 4 — TABLA COMPARATIVA FINAL:
-Muestra una tabla con TODOS los casos y conceptos:
-   Caso | Concepto | Sistema web | HTML v84 | Diferencia | ✓/✗
-Criterios:
-   - Tolerancia: ±$0.01 en montos. Cuotas deben ser exactas.
-   - NO compares fechas de primer/último pago si la cotización web no es de hoy
-     (dependen de la fecha y las planillas); indícalo como "no comparable".
-   - Si la cotización web es antigua, advierte que pudo calcularse con parámetros
-     anteriores.
-Cierra con un resumen: nº de conceptos comparados, coincidencias, diferencias y,
-para cada diferencia, tu diagnóstico de la causa probable (parámetro distinto,
-redondeo, dato del cliente distinto, fecha).
+Entrega el CSV como archivo descargable (o en bloque de código si es corto).
+Al final reporta: nº total de cotizaciones extraídas, estados incluidos, campos
+que no estaban disponibles, y cuántas páginas recorriste.
+
+Si el listado es muy grande (>200), extrae completas las 100 más recientes y
+lista solo id/fecha/producto/total del resto.
 ```
 
 ---
 
-## PENDIENTES para la próxima corrida (pedir a Cowork)
+## Qué hacer con los archivos
 
-Estado tras el reporte final del v83 (6/10 casos exactos en 13 rubros, 105/130
-rubros al centavo): el v84 añade la reconciliación también en modo POR MONTO
-(recibido = monto exacto, total = letra × pagos, notaría residual), que cierra
-los residuos de centavos de las cotizaciones por monto (COT-2363, COT-2371).
+Trae `PARAMETROS_PORTAL.md` y `COTIZACIONES_VIGENTES.csv` a la sesión de
+ingeniería (esta). Con eso:
+1. Se corrige el **mapeo de productos** (el portal no maneja "Empresa Privada";
+   el mapeo actual era interpretación de Cowork).
+2. Se descifra la regla de **comisión promotor** en Voluntario y Platinum a plazo
+   largo ajustando contra TODAS las cotizaciones vigentes (no solo 2 casos).
+3. Se valida el cotizador HTML contra el dataset completo, localmente, y las
+   próximas versiones se prueban contra ese mismo archivo sin tocar el portal.
 
-ÚNICO rubro pendiente: comisión promotor en (a) producto Voluntario y
-(b) Platinum a plazo largo (~72 meses). Pedir a Cowork:
-1. Extraer de tabla_matrices los valores EXACTOS (celda por celda, con encabezados
-   de fila y columna) de TODAS las columnas del producto Voluntario y de la fila
-   Platinum en todos los productos.
-2. Copiar 3-4 cotizaciones más de Voluntario (distintos promotores y plazos) y
-   2-3 de Platinum ≥60 cuotas, con su comisión promotor, para triangular la regla.
-3. Caso Jubilado: buscar en páginas más antiguas del listado (opción a).
+## Notas
 
-## Notas para ti (no van en el prompt)
-
-- **Regla CSS confirmada:** Pago Automático CSS tope de plazo = **48 meses** (decisión
-  de negocio). El v84 la aplica en el tope, las cuotas y la tabla de umbral. El sistema
-  web usa un bucket "Débito" de 72 sin separar CSS: las cotizaciones CSS del web con
-  plazo > 48 diferirán del v84 **a propósito** (el web es el que debería corregirse).
-
-- **Por qué ITBMS financiado + interés agregado:** son los valores por defecto del v84
-  (toggle "Interés: agregado" y ITBMS dentro de la base). Coinciden con la configuración
-  del sistema web según indicaste.
-- **Si el Paso 1 detecta parámetros distintos**, no tiene sentido comparar cotizaciones:
-  primero se alinean parámetros (o se anota la diferencia esperada).
-- **Casos no comparables por diseño:** fechas de pago (dependen del día y las planillas)
-  y la TIR si el sistema web la calcula con otro flujo. La letra, los cargos y los
-  totales sí deben coincidir al centavo.
-- Complemento opcional: en el repositorio está `quote-engine/golden/casos_dorados.csv`
-  (1,095 casos entrada→salida generados del v84 con un cliente de prueba fijo). Sirve
-  para probar cualquier sistema en dirección inversa: darle las entradas al otro
-  sistema y comparar contra lo esperado.
+- **Regla CSS confirmada:** tope de plazo CSS = 48 meses (decisión de negocio).
+  El portal usa un bucket "Débito" de 72 sin separar CSS: esas cotizaciones
+  diferirán a propósito.
+- **ITBMS financiado + interés agregado**: configuración vigente en ambos sistemas.
+- Pendiente único de cálculo: comisión promotor en Voluntario y Platinum ≥60
+  cuotas (se resuelve con esta extracción).
