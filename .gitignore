@@ -24,3 +24,6 @@ fiflouu n8n/node_modules/
 fiflouu n8n/fetch_log.txt
 fiflouu n8n/test-output.txt
 fiflouu n8n/coverage.json
+
+# Salida generada por el verificador de cotizaciones vigentes
+quote-engine/vigentes/ronda_result.json

@@ -80,3 +80,11 @@ ingeniería (esta). Con eso:
 - **ITBMS financiado + interés agregado**: configuración vigente en ambos sistemas.
 - Pendiente único de cálculo: comisión promotor en Voluntario y Platinum ≥60
   cuotas (se resuelve con esta extracción).
+
+## Resultado (calibración cerrada — v85)
+
+La extracción se hizo y la calibración local terminó en la ronda 3:
+**25/25 cotizaciones vigentes y 316/316 rubros dentro de tolerancia**
+(±$0.10 por rubro; Notaría ±$2.00). Evidencia: `Comparativo_v85_vs_portal.xlsx`.
+Para re-verificar cualquier versión futura sin tocar el portal:
+`node quote-engine/vigentes/verify_vigentes.mjs <ruta_al_html>`.

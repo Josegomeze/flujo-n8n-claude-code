@@ -20,8 +20,11 @@
   const isE = (v) => v && typeof v === 'object' && typeof v.value === 'string' && v.value[0] === '#';
   // Redondeo estilo Excel (mitad hacia afuera; DOWN/TRUNC hacia cero; UP alejándose de cero)
   const xround = (x, d) => { if (!isFinite(x)) return x; const f = Math.pow(10, d); return Math.sign(x) * Math.floor(Math.abs(x) * f + 0.5) / f; };
-  const xdown = (x, d) => { const f = Math.pow(10, d); return Math.sign(x) * Math.floor(Math.abs(x) * f) / f; };
-  const xup = (x, d) => { const f = Math.pow(10, d); return Math.sign(x) * Math.ceil(Math.abs(x) * f) / f; };
+  // DOWN/UP operan sobre 15 dígitos significativos (como Excel): sin esto,
+  // TRUNC(19.65,2) daría 19.64 porque 19.65*100 = 1964.999... en binario.
+  const sig15 = (x) => Number(x.toPrecision(15));
+  const xdown = (x, d) => { if (!isFinite(x)) return x; const f = Math.pow(10, d); return Math.sign(x) * Math.floor(sig15(Math.abs(x) * f)) / f; };
+  const xup = (x, d) => { if (!isFinite(x)) return x; const f = Math.pow(10, d); return Math.sign(x) * Math.ceil(sig15(Math.abs(x) * f)) / f; };
   const xtrunc = (x, d) => xdown(x, d);
   function colLetter(n) { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - m - 1) / 26); } return s; }
   function colToNum(s) { let n = 0; for (const ch of s) n = n * 26 + (ch.charCodeAt(0) - 64); return n - 1; }
@@ -178,33 +181,34 @@
       const g14 = cn('G14');
       let firstS = 0; try { firstS = mn('J12'); } catch (e) { firstS = 0; }
       if (!(firstS > 0) || !(g14 > 0)) return g14 / 12 + g14;
-      const exentoDic = claveOn('G11') && esCSS();
       const nPag = Math.round(g14 * 2);
       const d0 = new Date(EPOCH + Math.round(firstS) * 86400000);
-      let mm = d0.getUTCMonth(), curII = d0.getUTCDate() > 15;
-      let placed = 0, meses = 0, guard = 0;
-      // meses de financiamiento = meses CALENDARIO desde el mes siguiente a la
-      // cotización hasta el último pago (como el portal): incluye los meses de
-      // "hueco" hasta el primer pago, el mes inicial parcial (primer pago en 2ª
-      // quincena) y los diciembres saltados.
+      // Regla del portal (calibrada con las cotizaciones vigentes):
+      //   meses = cuotas + diciembres saltados + meses de hueco
+      //   - hueco = meses COMPLETOS entre la fecha de cotización y el primer pago
+      //     (mismo mes = 0; sin ajuste por quincena parcial)
+      //   - diciembre no se paga en NINGÚN producto (CSS incluido)
       const dHoy = new Date(EPOCH + todaySerial() * 86400000);
-      const idx = (y, m) => y * 12 + m;
-      const huecos = Math.max(0, idx(d0.getUTCFullYear(), d0.getUTCMonth()) - idx(dHoy.getUTCFullYear(), dHoy.getUTCMonth()) - 1);
-      meses += huecos;
+      let huecos = (d0.getUTCFullYear() * 12 + d0.getUTCMonth()) - (dHoy.getUTCFullYear() * 12 + dHoy.getUTCMonth());
+      if (d0.getUTCDate() < dHoy.getUTCDate()) huecos -= 1;
+      if (huecos < 0) huecos = 0;
+      let mm = d0.getUTCMonth(), placed = 0, meses = huecos, guard = 0;
       while (placed < nPag && guard++ < 4000) {
         meses++;
-        if (mm === 11 && !exentoDic) { /* diciembre: no se paga */ }
-        else { placed += curII ? 1 : 2; }
-        curII = false; mm++; if (mm > 11) mm = 0;
+        if (mm === 11) { /* diciembre: no se paga */ } else placed += 2;
+        mm++; if (mm > 11) mm = 0;
       }
       return meses;
     });
 
     // --- Tarifas por tipo × promotor ---
-    defC('S37', () => claveOn('G12') ? C('S86') : chooseTipo(37, { row: 43 }));
-    defC('S45', () => claveOn('G12') ? C('S94') : chooseTipo(45, { row: 52 }));
-    defC('S53', () => claveOn('G12') ? C('S102') : chooseTipo(53, 0.02));
-    defC('S61', () => claveOn('G12') ? C('S110') : chooseTipo(61, 0.25));
+    // El portal define las mismas matrices para Débito Automático (G11) y Pago
+    // Voluntario (G12); Descuento Directo (G8/G9/G10) usa las matrices base.
+    const usaVariante = () => claveOn('G12') || claveOn('G11');
+    defC('S37', () => usaVariante() ? C('S86') : chooseTipo(37, { row: 43 }));
+    defC('S45', () => usaVariante() ? C('S94') : chooseTipo(45, { row: 52 }));
+    defC('S53', () => usaVariante() ? C('S102') : chooseTipo(53, 0.02));
+    defC('S61', () => usaVariante() ? C('S110') : chooseTipo(61, 0.25));
     defC('S86', () => chooseTipo(86, { row: 92 }));
     defC('S94', () => chooseTipo(94, { row: 100 }));
     defC('S102', () => chooseTipo(102, 0.02));
@@ -296,8 +300,8 @@
       let letra;
       if (cn('D8') > 0) letra = cn('D8');
       else {
-        const g33base = resto + notariaBase();               // total con notaría base
-        letra = xtrunc(xround(g33base / cn('G14') / 2, 2), 2); // letra redondeada a centavos
+        const g33base = resto + notariaBase();     // total con notaría base
+        letra = xround(g33base / cn('G14') / 2, 2); // letra al centavo (redondeo estándar)
       }
       return xround(letra * cn('G14') * 2 - resto, 2);
     });
