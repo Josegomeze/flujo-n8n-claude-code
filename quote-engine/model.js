@@ -286,15 +286,20 @@
     defC('F23', () => xdown(cn('AF11') * cn('G21'), 2));
     defC('F25', () => xround(cn('G21') * cn('H25'), 2));
     defC('F31', () => xround(cn('G21') > 5000 ? cn('G21') * cn('H31') * ((cn('H14') * 30) / 360) : 0, 2));
-    // Notaría: en cotización POR LETRA es el residual de reconciliación (como el
-    // portal): total = letra × cuotas × 2 exacto, y la notaría absorbe los centavos
-    // de redondeo (flexiona alrededor de la base). En monto/capacidad: base fija.
+    // Notaría: residual de reconciliación (como el portal) en TODOS los modos.
+    // La letra queda redondeada a centavos, total = letra × cuotas × 2 EXACTO y la
+    // notaría absorbe el residuo (flexiona alrededor de la base). En modo por monto,
+    // además, el recibido en mano queda igual al monto solicitado exacto.
     const notariaBase = () => num(rawA1('Calculadora', 'F30'));
     defC('F30', () => {
-      if (!(cn('D8') > 0)) return notariaBase();
-      const target = xround(cn('D8') * cn('G14') * 2, 2);
       const resto = cn('F16') + cn('F17') + cn('F18') + cn('F19') + cn('F20') + cn('F23') + cn('F25') + cn('F26') + cn('F27') + cn('F28') + cn('F31');
-      return xround(target - resto, 2);
+      let letra;
+      if (cn('D8') > 0) letra = cn('D8');
+      else {
+        const g33base = resto + notariaBase();               // total con notaría base
+        letra = xtrunc(xround(g33base / cn('G14') / 2, 2), 2); // letra redondeada a centavos
+      }
+      return xround(letra * cn('G14') * 2 - resto, 2);
     });
     defC('H33', () => { const sum = cn('F16') + cn('F17') + cn('F18') + cn('F19') + cn('F20') + cn('F23') + cn('F25');
       return (sum - (cn('AF1') === 1 ? cn('F20') : 0) + notariaBase() + cn('F31') + cn('AB19')) / (1 - cn('H32')); });

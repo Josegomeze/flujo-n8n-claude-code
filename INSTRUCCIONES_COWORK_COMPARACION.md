@@ -1,14 +1,14 @@
-# Instrucciones para Cowork — Comparar el sistema web vs el Cotizador HTML v83
+# Instrucciones para Cowork — Comparar el sistema web vs el Cotizador HTML v84
 
 **Objetivo:** verificar que el sistema web (`zonasegura.financieralaprosperidad.app`) y el
-Cotizador HTML v83 producen **los mismos resultados**, copiando 10 cotizaciones reales
-(lo más dispares posible) del sistema web y reproduciéndolas en el v83.
+Cotizador HTML v84 producen **los mismos resultados**, copiando 10 cotizaciones reales
+(lo más dispares posible) del sistema web y reproduciéndolas en el v84.
 
 ---
 
 ## Preparación (antes de pegar el prompt)
 
-1. Adjunta a la sesión de Cowork el archivo **`Cotizador_Fiflouu__web__v83.html`**.
+1. Adjunta a la sesión de Cowork el archivo **`Cotizador_Fiflouu__web__v84.html`**.
 2. Asegúrate de estar **logueado** en `zonasegura.financieralaprosperidad.app` en el
    navegador conectado a Cowork.
 
@@ -25,19 +25,19 @@ REGLAS OBLIGATORIAS (no negociables):
    No entres a "nueva cotización" ni hagas clic en botones de acción. Solo navegar
    listas y abrir detalles para leer.
 2. TODOS los cálculos se hacen ÚNICAMENTE en el archivo adjunto
-   Cotizador_Fiflouu__web__v83.html (ábrelo en el navegador).
-3. En el v83 verifica antes de cotizar: el botón de método debe decir
+   Cotizador_Fiflouu__web__v84.html (ábrelo en el navegador).
+3. En el v84 verifica antes de cotizar: el botón de método debe decir
    "Interés: agregado" (NO "sobre saldo") y el toggle de ITBMS fuera debe estar
    DESACTIVADO (el ITBMS se financia dentro). Son los valores por defecto; no los cambies.
-4. No modifiques parámetros de la financiera en el v83. Si en el PASO 1 encuentras
+4. No modifiques parámetros de la financiera en el v84. Si en el PASO 1 encuentras
    diferencias de parámetros, DETENTE y repórtamelas antes de continuar.
 
 PASO 1 — VERIFICAR QUE AMBOS SISTEMAS USAN LOS MISMOS PARÁMETROS:
 a) Abre https://zonasegura.financieralaprosperidad.app/patrono_categories y
    https://zonasegura.financieralaprosperidad.app/tabla_matrices (solo ver).
-b) En el v83 abre "⚙ Ver / editar Parámetros financiera" y la pestaña
+b) En el v84 abre "⚙ Ver / editar Parámetros financiera" y la pestaña
    "Tablas (ref)" de la sección avanzada.
-c) Compara y muestra una tabla de verificación (parámetro | web | v83 | ¿igual?):
+c) Compara y muestra una tabla de verificación (parámetro | web | v84 | ¿igual?):
    - Matrices tarifarias por tipo de cliente × promotor: comisión, interés y
      gasto de cierre / comisión administrativa (en %).
    - Plazo máximo por tipo de cliente.
@@ -65,19 +65,19 @@ Para CADA cotización copia (léelo del detalle, no calcules nada):
    monto obligación neta, total a pagar, intereses, comisión administrativa,
    comisión promotor, servicio de descuento, timbres, FECI, ITBMS, notaría.
 
-PASO 3 — REPRODUCIR CADA CASO EN EL v83 (aquí SÍ calculas):
-Para cada uno de los 10 casos, en el HTML v83:
+PASO 3 — REPRODUCIR CADA CASO EN EL v84 (aquí SÍ calculas):
+Para cada uno de los 10 casos, en el HTML v84:
    a) Si la cédula existe en el selector, selecciónala. Si no, usa "➕ Agregar
       cliente" con el salario, descuentos, institución y tipo de cliente del caso.
    b) Selecciona la clave de descuento, el promotor y el tipo de cliente del caso.
    c) Ingresa monto O letra (según cómo se hizo en la web), plazo,
       refinanciamiento y cancelación a terceros.
    d) Confirma: "Interés: agregado" e ITBMS financiado (toggle fuera = OFF).
-   e) Lee los resultados de la cotización del v83.
+   e) Lee los resultados de la cotización del v84.
 
 PASO 4 — TABLA COMPARATIVA FINAL:
 Muestra una tabla con TODOS los casos y conceptos:
-   Caso | Concepto | Sistema web | HTML v83 | Diferencia | ✓/✗
+   Caso | Concepto | Sistema web | HTML v84 | Diferencia | ✓/✗
 Criterios:
    - Tolerancia: ±$0.01 en montos. Cuotas deben ser exactas.
    - NO compares fechas de primer/último pago si la cotización web no es de hoy
@@ -93,26 +93,28 @@ redondeo, dato del cliente distinto, fecha).
 
 ## PENDIENTES para la próxima corrida (pedir a Cowork)
 
-El v83 incorpora las 2 últimas reglas del portal (reporte del 03/07/2026):
-- **Meses de hueco**: los meses entre la cotización y el primer pago ahora se
-  cuentan en los meses de financiamiento (Descuento Directo con primer pago el 15
-  del mes subsiguiente ya no queda 1 mes corto).
-- **Notaría residual**: en cotización POR LETRA la notaría se calcula como el
-  residual de reconciliación para que total = letra × nº de pagos exacto (flexiona
-  alrededor de la base, como el portal). En monto/capacidad sigue fija en la base.
+Estado tras el reporte final del v83 (6/10 casos exactos en 13 rubros, 105/130
+rubros al centavo): el v84 añade la reconciliación también en modo POR MONTO
+(recibido = monto exacto, total = letra × pagos, notaría residual), que cierra
+los residuos de centavos de las cotizaciones por monto (COT-2363, COT-2371).
 
-Para la próxima corrida: re-verificar los 10 casos (el interés de Descuento
-Directo y la notaría deberían quedar al centavo) e incluir si es posible 1 caso
-Jubilado y 1 con refinanciamiento/cancelación a terceros.
+ÚNICO rubro pendiente: comisión promotor en (a) producto Voluntario y
+(b) Platinum a plazo largo (~72 meses). Pedir a Cowork:
+1. Extraer de tabla_matrices los valores EXACTOS (celda por celda, con encabezados
+   de fila y columna) de TODAS las columnas del producto Voluntario y de la fila
+   Platinum en todos los productos.
+2. Copiar 3-4 cotizaciones más de Voluntario (distintos promotores y plazos) y
+   2-3 de Platinum ≥60 cuotas, con su comisión promotor, para triangular la regla.
+3. Caso Jubilado: buscar en páginas más antiguas del listado (opción a).
 
 ## Notas para ti (no van en el prompt)
 
 - **Regla CSS confirmada:** Pago Automático CSS tope de plazo = **48 meses** (decisión
-  de negocio). El v83 la aplica en el tope, las cuotas y la tabla de umbral. El sistema
+  de negocio). El v84 la aplica en el tope, las cuotas y la tabla de umbral. El sistema
   web usa un bucket "Débito" de 72 sin separar CSS: las cotizaciones CSS del web con
-  plazo > 48 diferirán del v83 **a propósito** (el web es el que debería corregirse).
+  plazo > 48 diferirán del v84 **a propósito** (el web es el que debería corregirse).
 
-- **Por qué ITBMS financiado + interés agregado:** son los valores por defecto del v83
+- **Por qué ITBMS financiado + interés agregado:** son los valores por defecto del v84
   (toggle "Interés: agregado" y ITBMS dentro de la base). Coinciden con la configuración
   del sistema web según indicaste.
 - **Si el Paso 1 detecta parámetros distintos**, no tiene sentido comparar cotizaciones:
@@ -121,6 +123,6 @@ Jubilado y 1 con refinanciamiento/cancelación a terceros.
   y la TIR si el sistema web la calcula con otro flujo. La letra, los cargos y los
   totales sí deben coincidir al centavo.
 - Complemento opcional: en el repositorio está `quote-engine/golden/casos_dorados.csv`
-  (1,095 casos entrada→salida generados del v83 con un cliente de prueba fijo). Sirve
+  (1,095 casos entrada→salida generados del v84 con un cliente de prueba fijo). Sirve
   para probar cualquier sistema en dirección inversa: darle las entradas al otro
   sistema y comparar contra lo esperado.
