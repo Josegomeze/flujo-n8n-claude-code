@@ -3,12 +3,14 @@
 Guía para implementar el cotizador como sistema con **Backend + tablas + Base de
 datos**, partiendo de lo que ya está construido y validado en este repositorio.
 
-**Estado actual:** la versión vigente es `Cotizador_Fiflouu__web__v85.html` — un
+**Estado actual:** la versión vigente es `Cotizador_Fiflouu__web__v86.html` — un
 solo archivo HTML autocontenido (sin dependencias externas, sin GPL) cuyo motor
 de cálculo es JavaScript puro. Está **calibrado contra el portal de producción**
 (`zonasegura.financieralaprosperidad.app`): reproduce las 25 cotizaciones
 vigentes del portal con 316/316 rubros dentro de tolerancia (±$0.10 por rubro;
-Notaría ±$2.00).
+Notaría ±$2.00). El v86 añade sobre el v85 un **switch por clave de la base de
+la comisión al promotor** (ver §3); con los switches en el método original
+(default) los resultados son idénticos al v85 calibrado.
 
 ---
 
@@ -16,10 +18,10 @@ Notaría ±$2.00).
 
 | Ruta | Qué es |
 |---|---|
-| `Cotizador_Fiflouu__web__v85.html` | **Versión vigente.** UI completa + motor por código + datos incrustados. |
-| `Cotizador_Fiflouu__web__v76..v84.html` | Versiones anteriores (historia; v76 es la última con motor de hoja de cálculo). |
-| `Parametros_v85.json` | **Todos los parámetros del negocio en JSON** (catálogos, matrices, topes, reglas). Es la semilla de las tablas de la BD. |
-| `Parametros_v85_programador.xlsx` | Lo mismo, en Excel legible (8 hojas). |
+| `Cotizador_Fiflouu__web__v86.html` | **Versión vigente.** UI completa + motor por código + datos incrustados. |
+| `Cotizador_Fiflouu__web__v76..v85.html` | Versiones anteriores (v85 = calibración contra el portal; v76 es la última con motor de hoja de cálculo). |
+| `Parametros_v86.json` | **Todos los parámetros del negocio en JSON** (catálogos, matrices, topes, switch de base de comisión, reglas). Es la semilla de las tablas de la BD. |
+| `Parametros_v86_programador.xlsx` | Lo mismo, en Excel legible (8 hojas). |
 | `Comparativo_v85_vs_portal.xlsx` | Evidencia de la validación contra el portal (25 cotizaciones, rubro por rubro). |
 | `quote-engine/model.js` | **El motor de cálculo** (JavaScript puro, sin dependencias). Es el mismo código que corre dentro del v85. |
 | `quote-engine/build_v85.mjs` | Script que construye el v85 desde el v76 (inyecta motor, aplica matrices del portal, elimina fórmulas). |
@@ -63,6 +65,12 @@ que más se prestan a error:
 - **Comisión promotor**: el % de la matriz se prorratea por
   `min(plazo_meses, meses_max_tabla) / plazo_meses` (tabla clave × tipo;
   144 en general, Voluntario 60, Empresa Privada × Platinum 60).
+- **Base de la comisión promotor — switch por clave** (`Calculadora!AL2:AL7`,
+  editable en el panel financiera, sección 5c): `0` = % sobre el **total a
+  pagar** (gross-up; método original y default), `1` = % sobre el **monto a
+  financiar** (la obligación neta, la misma base de los intereses; la comisión
+  sale del gross-up y entra al total como sumando). El prorrateo por meses
+  aplica con ambas bases. En la BD debe ser una columna de `parametros_clave`.
 - **Notaría = residual de reconciliación** alrededor de la base de $25: la letra
   se redondea al centavo y la notaría absorbe el residuo para que
   `total = letra × quincenas` sea EXACTO. En modo por monto, el recibido en mano
@@ -138,7 +146,7 @@ en vez del bloque `RAW` incrustado, hidratar las mismas celdas desde la BD.
 | `productos` | claves y grupo de matrices (base/variante) ← `catalogos.productos_claves` |
 | `matrices_tarifas` | `(financiera_id, grupo, concepto, tipo_codigo, nivel_promotor, valor)` ← `matrices_tarifarias` |
 | `comision_meses_max` | `(financiera_id, clave, tipo_codigo, meses)` ← `comision_promotor_meses_maximos` |
-| `parametros_clave` | capacidad, plazo máx, servicio por clave ← `parametros_por_clave` |
+| `parametros_clave` | capacidad, plazo máx, servicio y base de comisión por clave ← `parametros_por_clave` |
 | `topes_tipo` | plazo máximo por tipo ← `topes_plazo_por_tipo_meses` |
 | `parametros_globales` | ITBMS, FECI, timbres, notaría base, letra mínima, edades, tope CSS ← `parametros_globales` |
 | `clientes` | cédula → salario, descuentos, embargos, descontable, nacimiento, género (hoy: pestaña DATOS del HTML) |
@@ -170,7 +178,7 @@ Cualquier implementación nueva debe pasar, en este orden:
 Para verificar el HTML actual (necesita un Chromium headless):
 
 ```bash
-node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v85.html
+node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v86.html
 # salida esperada: cotizaciones OK 25/25 | rubros OK 316/316
 ```
 
@@ -190,5 +198,5 @@ node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v85.html
 
 - No usar los **nombres** de tipos como llave (se renombran por financiera).
 - No recalcular con float sin replicar los redondeos de `model.js` (§3).
-- No tomar parámetros de versiones < v85: solo el v85 está calibrado al portal.
+- No tomar parámetros de versiones < v86 (v85 fue la calibración; v86 = v85 + switch de base de comisión).
 - No escribir en el portal `zonasegura` — es solo referencia de lectura.

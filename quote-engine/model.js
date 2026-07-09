@@ -225,13 +225,18 @@
     defC('H27', () => C('Y20'));
     defC('H28', () => C('Y25'));
     defC('H31', () => C('Y26'));
-    defC('H32', () => cn('H26') + cn('H28') + cn('H27'));
+    defC('H32', () => (comBaseNeta() ? 0 : cn('H26')) + cn('H28') + cn('H27'));
     defC('AF11', () => { const y16 = cn('Y16'), h14 = cn('H14');
       return cn('AF10') === 1 ? (y16 * h14) / (1 - Math.pow(1 + y16, -h14)) - 1 : y16 * h14; });
     defC('AB19', () => eqs(C('I1'), 'Referido $100') ? 100 : 0);
 
     // --- Umbral por clave (panel financiera) ---
     const claveRow = () => claveOn('G8') ? 5 : claveOn('G9') ? 6 : claveOn('G10') ? 4 : claveOn('G11') ? (esCSS() ? 3 : 2) : 7;
+    // Base de la comisión al promotor por clave (AL2:AL7):
+    //   0 = % sobre el TOTAL A PAGAR (gross-up; método original)
+    //   1 = % sobre el MONTO A FINANCIAR (la obligación neta, misma base de los intereses)
+    // El techo de meses (AI10:AO15) aplica con ambas bases (va dentro de Y19/H26).
+    const comBaseNeta = () => { try { return cn('AL' + claveRow()) === 1; } catch (_) { return false; } };
     defC('AM2', () => cn('AI' + claveRow()));
     defC('AM3', () => cn('AJ' + claveRow()));
     defC('AM4', () => cn('AK' + claveRow()));
@@ -263,10 +268,14 @@
     defC('M9', () => cn('M10') * cn('Y18') * cn('H20'));
     defC('N9', () => cn('N10') * cn('Y18') * cn('H20'));
     function grossUp(baseLetra) { // M10/N10: obligación desde letra (idéntico a la hoja)
-      const A = ((baseLetra * cn('G14') * 2) * (1 - (cn('Y19') + cn('Y20') + cn('Y25')))) - 25 - cn('AB19');
-      const afTerm = cn('AF1') === 1 ? (cn('Y18') * cn('Y23') * (1 - (cn('Y19') + cn('Y20') + cn('Y25')))) : 0;
-      const B1 = 1 + (cn('AF11')) + (cn('Y18')) + afTerm;
-      const B2 = 1 + (cn('AF11')) + (cn('Y18')) + (cn('Y26') * ((cn('H14') * 30) / 360)) + afTerm;
+      // Con base neta, la comisión (Y19) deja de ser % del total y pasa al
+      // denominador como tasa sobre la obligación (igual que el manejo Y18).
+      const pctTotal = (comBaseNeta() ? 0 : cn('Y19')) + cn('Y20') + cn('Y25');
+      const pctNeta = comBaseNeta() ? cn('Y19') : 0;
+      const A = ((baseLetra * cn('G14') * 2) * (1 - pctTotal)) - 25 - cn('AB19');
+      const afTerm = cn('AF1') === 1 ? (cn('Y18') * cn('Y23') * (1 - pctTotal)) : 0;
+      const B1 = 1 + (cn('AF11')) + (cn('Y18')) + pctNeta + afTerm;
+      const B2 = 1 + (cn('AF11')) + (cn('Y18')) + pctNeta + (cn('Y26') * ((cn('H14') * 30) / 360)) + afTerm;
       return (A / B1 > 5000) ? A / B2 : A / B1;
     }
     defC('M10', () => grossUp(cn('D8')));
@@ -306,9 +315,10 @@
       return xround(letra * cn('G14') * 2 - resto, 2);
     });
     defC('H33', () => { const sum = cn('F16') + cn('F17') + cn('F18') + cn('F19') + cn('F20') + cn('F23') + cn('F25');
-      return (sum - (cn('AF1') === 1 ? cn('F20') : 0) + notariaBase() + cn('F31') + cn('AB19')) / (1 - cn('H32')); });
+      const comNeta = comBaseNeta() ? xround(cn('G21') * cn('H26'), 2) : 0; // con base neta la comisión entra como sumando (ya no está en H32)
+      return (sum - (cn('AF1') === 1 ? cn('F20') : 0) + comNeta + notariaBase() + cn('F31') + cn('AB19')) / (1 - cn('H32')); });
     defC('I33', () => C('F34'));
-    defC('F26', () => (xround(cn('H33') * cn('H26'), 2) + cn('AB19')) - cn('I33') + cn('AB19'));
+    defC('F26', () => (xround((comBaseNeta() ? cn('G21') : cn('H33')) * cn('H26'), 2) + cn('AB19')) - cn('I33') + cn('AB19'));
     defC('F27', () => xround(cn('H33') * cn('H27'), 2));
     defC('F28', () => xup(cn('H33') * cn('H28'), 1));
     defC('G33', () => cn('F16') + cn('F17') + cn('F18') + cn('F19') + cn('F20') + cn('F23') + cn('F25') + cn('F26') + cn('F27') + cn('F28') + cn('F30') + cn('F31'));
