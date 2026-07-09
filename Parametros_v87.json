@@ -1,0 +1,698 @@
+{
+  "version": "v87",
+  "generado": "2026-07-09",
+  "fuente": "Cotizador_Fiflouu__web__v87.html (motor por código, sin hoja de cálculo)",
+  "validacion": {
+    "resultado": "25/25 cotizaciones vigentes del portal y 316/316 rubros dentro de tolerancia (v87 con switches en método original = misma calibración del v85)",
+    "tolerancias": {
+      "por_rubro_usd": 0.1,
+      "notaria_usd": 2
+    },
+    "evidencia": "Comparativo_v85_vs_portal.xlsx"
+  },
+  "catalogos": {
+    "tipos_cliente": [
+      {
+        "codigo": 1,
+        "nombre": "Diamante",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      },
+      {
+        "codigo": 2,
+        "nombre": "Platinum",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      },
+      {
+        "codigo": 3,
+        "nombre": "Premium",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      },
+      {
+        "codigo": 4,
+        "nombre": "24-59 meses",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      },
+      {
+        "codigo": 5,
+        "nombre": "0-23 meses",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      },
+      {
+        "codigo": 6,
+        "nombre": "Recien Nombrado",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      },
+      {
+        "codigo": 7,
+        "nombre": "Eventual",
+        "nota": "el código 1-7 es la identidad fija; el nombre es etiqueta visual renombrable por financiera"
+      }
+    ],
+    "niveles_promotor": [
+      {
+        "columna": 1,
+        "nombre": "Completo"
+      },
+      {
+        "columna": 2,
+        "nombre": "Media"
+      },
+      {
+        "columna": 3,
+        "nombre": "Baja"
+      },
+      {
+        "columna": 4,
+        "nombre": "Sin Comision"
+      },
+      {
+        "columna": 5,
+        "nombre": "Referido",
+        "nota": "paga $100 fijos por cotización en lugar de porcentaje"
+      }
+    ],
+    "claves_operativas": [
+      {
+        "selector": "G8",
+        "nombre": "Empresa Privada",
+        "grupo_matrices": "base"
+      },
+      {
+        "selector": "G9",
+        "nombre": "Jubilado y Pensionado",
+        "grupo_matrices": "base"
+      },
+      {
+        "selector": "G10",
+        "nombre": "Gobierno (Descuento Directo)",
+        "grupo_matrices": "base"
+      },
+      {
+        "selector": "G11",
+        "entidad": "Contraloría",
+        "nombre": "Pago Automático — Contraloría",
+        "grupo_matrices": "variante"
+      },
+      {
+        "selector": "G11",
+        "entidad": "Caja de Seguro Social",
+        "nombre": "Pago Automático — CSS",
+        "grupo_matrices": "variante"
+      },
+      {
+        "selector": "G12",
+        "nombre": "Descuento Voluntario",
+        "grupo_matrices": "variante"
+      }
+    ],
+    "nota_claves": "Catálogo CANÓNICO: el selector de cotización tiene 5 claves (G8-G12); Pago Automático (G11) se subdivide por entidad (Contraloría/CSS) y por eso las tablas por clave tienen 6 filas. Estos nombres y este orden son los mismos en todo el sistema.",
+    "productos_claves": [
+      {
+        "clave": "G8",
+        "nombre": "Empresa Privada",
+        "matrices": "base"
+      },
+      {
+        "clave": "G9",
+        "nombre": "Jubilado",
+        "matrices": "base"
+      },
+      {
+        "clave": "G10",
+        "nombre": "Gobierno / Descuento Directo",
+        "matrices": "base"
+      },
+      {
+        "clave": "G11",
+        "nombre": "Pago Automático / Débito (Contraloría o CSS)",
+        "matrices": "variante"
+      },
+      {
+        "clave": "G12",
+        "nombre": "Descuento Voluntario / Pago Voluntario",
+        "matrices": "variante"
+      }
+    ]
+  },
+  "matrices_tarifarias": {
+    "nota": "fracciones decimales (0.05 = 5%). Filas = tipo de cliente (1-7); columnas = nivel del promotor. Débito Automático y Pago Voluntario usan las MISMAS matrices variante (así lo define el portal).",
+    "base_descuento_directo": {
+      "comision_promotor": {
+        "1. Diamante": {
+          "Completo": 0.05,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "2. Platinum": {
+          "Completo": 0.05,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "3. Premium": {
+          "Completo": 0.05,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "4. 24-59 meses": {
+          "Completo": 0.036,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "5. 0-23 meses": {
+          "Completo": 0.036,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "6. Recien Nombrado": {
+          "Completo": 0.036,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "7. Eventual": {
+          "Completo": 0.036,
+          "Media": 0.03,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        }
+      },
+      "interes_mensual": {
+        "1. Diamante": {
+          "Completo": 0.01,
+          "Media": 0.01,
+          "Baja": 0.01,
+          "Sin Comision": 0.01,
+          "Referido": 0.01
+        },
+        "2. Platinum": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "3. Premium": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "4. 24-59 meses": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "5. 0-23 meses": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "6. Recien Nombrado": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "7. Eventual": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        }
+      },
+      "gasto_manejo": {
+        "1. Diamante": {
+          "Completo": 0.35,
+          "Media": 0.35,
+          "Baja": 0.35,
+          "Sin Comision": 0.35,
+          "Referido": 0.35
+        },
+        "2. Platinum": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "3. Premium": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "4. 24-59 meses": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "5. 0-23 meses": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "6. Recien Nombrado": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "7. Eventual": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        }
+      },
+      "costo_multiplicador": {
+        "1. Diamante": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "2. Platinum": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "3. Premium": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "4. 24-59 meses": {
+          "Completo": 1.5,
+          "Media": 1.4,
+          "Baja": 1.3,
+          "Sin Comision": 1.2,
+          "Referido": 1.5
+        },
+        "5. 0-23 meses": {
+          "Completo": 2,
+          "Media": 1.9,
+          "Baja": 1.6,
+          "Sin Comision": 1.5,
+          "Referido": 2
+        },
+        "6. Recien Nombrado": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "7. Eventual": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        }
+      }
+    },
+    "variante_debito_y_voluntario": {
+      "comision_promotor": {
+        "1. Diamante": {
+          "Completo": 0.07,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "2. Platinum": {
+          "Completo": 0.07,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "3. Premium": {
+          "Completo": 0.07,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "4. 24-59 meses": {
+          "Completo": 0.036,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "5. 0-23 meses": {
+          "Completo": 0.036,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "6. Recien Nombrado": {
+          "Completo": 0.036,
+          "Media": 0.036,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        },
+        "7. Eventual": {
+          "Completo": 0.036,
+          "Media": 0.03,
+          "Baja": 0.02,
+          "Sin Comision": 0,
+          "Referido": 0
+        }
+      },
+      "interes_mensual": {
+        "1. Diamante": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "2. Platinum": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "3. Premium": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "4. 24-59 meses": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "5. 0-23 meses": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "6. Recien Nombrado": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        },
+        "7. Eventual": {
+          "Completo": 0.02,
+          "Media": 0.02,
+          "Baja": 0.02,
+          "Sin Comision": 0.02,
+          "Referido": 0.02
+        }
+      },
+      "gasto_manejo": {
+        "1. Diamante": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "2. Platinum": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "3. Premium": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "4. 24-59 meses": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "5. 0-23 meses": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "6. Recien Nombrado": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        },
+        "7. Eventual": {
+          "Completo": 0.25,
+          "Media": 0.25,
+          "Baja": 0.25,
+          "Sin Comision": 0.25,
+          "Referido": 0.25
+        }
+      },
+      "costo_multiplicador": {
+        "1. Diamante": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "2. Platinum": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "3. Premium": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "4. 24-59 meses": {
+          "Completo": 1.5,
+          "Media": 1.4,
+          "Baja": 1.3,
+          "Sin Comision": 1.2,
+          "Referido": 1.5
+        },
+        "5. 0-23 meses": {
+          "Completo": 2,
+          "Media": 1.9,
+          "Baja": 1.6,
+          "Sin Comision": 1.5,
+          "Referido": 2
+        },
+        "6. Recien Nombrado": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        },
+        "7. Eventual": {
+          "Completo": 1,
+          "Media": 0.9,
+          "Baja": 0.8,
+          "Sin Comision": 0.7,
+          "Referido": 1
+        }
+      }
+    }
+  },
+  "comision_promotor_meses_maximos": {
+    "nota": "meses de plazo sobre los que se paga la comisión: factor = min(plazo_meses, max) / plazo_meses. Filas = clave; columnas = tipo de cliente 1-7.",
+    "tabla": {
+      "Empresa Privada": {
+        "1. Diamante": 144,
+        "2. Platinum": 60,
+        "3. Premium": 144,
+        "4. 24-59 meses": 144,
+        "5. 0-23 meses": 144,
+        "6. Recien Nombrado": 144,
+        "7. Eventual": 144
+      },
+      "Jubilado y Pensionado": {
+        "1. Diamante": 144,
+        "2. Platinum": 144,
+        "3. Premium": 144,
+        "4. 24-59 meses": 144,
+        "5. 0-23 meses": 144,
+        "6. Recien Nombrado": 144,
+        "7. Eventual": 144
+      },
+      "Gobierno (Descuento Directo)": {
+        "1. Diamante": 144,
+        "2. Platinum": 144,
+        "3. Premium": 144,
+        "4. 24-59 meses": 144,
+        "5. 0-23 meses": 144,
+        "6. Recien Nombrado": 144,
+        "7. Eventual": 144
+      },
+      "Pago Automático — Contraloría": {
+        "1. Diamante": 144,
+        "2. Platinum": 144,
+        "3. Premium": 144,
+        "4. 24-59 meses": 144,
+        "5. 0-23 meses": 144,
+        "6. Recien Nombrado": 144,
+        "7. Eventual": 144
+      },
+      "Pago Automático — CSS": {
+        "1. Diamante": 144,
+        "2. Platinum": 144,
+        "3. Premium": 144,
+        "4. 24-59 meses": 144,
+        "5. 0-23 meses": 144,
+        "6. Recien Nombrado": 144,
+        "7. Eventual": 144
+      },
+      "Descuento Voluntario": {
+        "1. Diamante": 60,
+        "2. Platinum": 60,
+        "3. Premium": 60,
+        "4. 24-59 meses": 60,
+        "5. 0-23 meses": 60,
+        "6. Recien Nombrado": 60,
+        "7. Eventual": 60
+      }
+    }
+  },
+  "parametros_por_clave": {
+    "Empresa Privada": {
+      "capacidad_descuento_sobre_salario": 0.26,
+      "meses_referencia": 60,
+      "plazo_maximo_meses": 144,
+      "servicio_descuento": 0.03,
+      "base_comision_promotor": "total_a_pagar"
+    },
+    "Jubilado y Pensionado": {
+      "capacidad_descuento_sobre_salario": 0.26,
+      "meses_referencia": 60,
+      "plazo_maximo_meses": 144,
+      "servicio_descuento": 0.03,
+      "base_comision_promotor": "total_a_pagar"
+    },
+    "Gobierno (Descuento Directo)": {
+      "capacidad_descuento_sobre_salario": 0.26,
+      "meses_referencia": 60,
+      "plazo_maximo_meses": 144,
+      "servicio_descuento": 0.03,
+      "base_comision_promotor": "total_a_pagar"
+    },
+    "Pago Automático — Contraloría": {
+      "capacidad_descuento_sobre_salario": 0.3,
+      "meses_referencia": 48,
+      "plazo_maximo_meses": 72,
+      "servicio_descuento": 0.03,
+      "base_comision_promotor": "total_a_pagar"
+    },
+    "Pago Automático — CSS": {
+      "capacidad_descuento_sobre_salario": 0.3,
+      "meses_referencia": 48,
+      "plazo_maximo_meses": 48,
+      "servicio_descuento": 0.03,
+      "base_comision_promotor": "total_a_pagar"
+    },
+    "Descuento Voluntario": {
+      "capacidad_descuento_sobre_salario": 0.3,
+      "meses_referencia": 96,
+      "plazo_maximo_meses": 144,
+      "servicio_descuento": 0.03,
+      "base_comision_promotor": "total_a_pagar"
+    }
+  },
+  "topes_plazo_por_tipo_meses": {
+    "1. Diamante": 300,
+    "2. Platinum": 132,
+    "3. Premium": 84,
+    "4. 24-59 meses": 48,
+    "5. 0-23 meses": 36,
+    "6. Recien Nombrado": 60,
+    "7. Eventual": 11
+  },
+  "parametros_globales": {
+    "itbms": 0.07,
+    "itbms_financiado": true,
+    "metodo_interes": "agregado (interés simple sobre la obligación neta)",
+    "feci_anual": 0.01,
+    "feci_umbral_obligacion_neta": 5000,
+    "timbres": 0.001,
+    "notaria_base_usd": 25,
+    "referido_monto_fijo_usd": 100,
+    "letra_minima_usd": 5,
+    "edad_jubilacion": {
+      "femenino": 57,
+      "masculino": 62
+    },
+    "tope_css_meses": 48,
+    "seguro_S29": 0.5
+  },
+  "reglas_calculo": [
+    "1. Obligación neta (G21) = recibido en mano + refinanciamiento + cancelación a terceros + otros + ITBMS (el ITBMS se financia).",
+    "2. ITBMS (F20) = ROUND( base/(1 − 7%×manejo%) × manejo% × 7%, 2). Es 7% sobre la comisión de manejo, incorporado a la obligación.",
+    "3. Meses de financiamiento (H14) = meses de pago + diciembres saltados (en TODOS los productos no se paga diciembre) + meses completos de gracia entre la fecha de cotización y el primer pago (mismo mes = 0).",
+    "4. Interés (F23) = ROUNDDOWN( tasa_mensual × H14 × G21, 2). Método agregado (simple), sin amortización.",
+    "5. Comisión de manejo (F25) = ROUND( G21 × manejo%, 2).",
+    "6. FECI (F31) = si G21 > 5000: ROUND( G21 × 1% × (H14×30)/360, 2); si no, 0.",
+    "7. Total bruto (H33) = (G21 + interés + manejo + notaría_base + FECI + referido) / (1 − (%comisión_efectiva + %servicio + %timbres)). Gross-up para que los rubros porcentuales se cobren sobre el total.",
+    "8. Comisión promotor (F26): la BASE es un switch por clave (AL2:AL7). Método \"total_a_pagar\" (original): ROUND( H33 × %comisión_efectiva, 2) con gross-up. Método \"monto_a_financiar\": ROUND( G21 × %comisión_efectiva, 2) — la misma base de los intereses; la comisión sale del gross-up (H32) y entra al total como sumando. En AMBOS: %comisión_efectiva = %matriz × min(plazo_meses, meses_max_tabla) / plazo_meses; +$100 si es Referido; «Sin Promotor» = 0.",
+    "9. Servicio de descuento (F27) = ROUND( H33 × 3%, 2) — 3% en todas las claves.",
+    "10. Timbres (F28) = ROUNDUP( H33 × 0.1%, 1) — redondeo hacia arriba a la décima.",
+    "11. Notaría (F30) = residual de reconciliación alrededor de la base de $25: la letra se redondea al centavo y la notaría absorbe el residuo para que total = letra × quincenas EXACTO. En modo por monto, el recibido queda igual al monto solicitado exacto.",
+    "12. Total a pagar (G33) = suma de todos los rubros. Letra quincenal (C24) = TRUNC( ROUND( G33 / plazo_meses / 2, 2), 2).",
+    "13. Redondeos estilo Excel: mitad hacia afuera; TRUNC/ROUNDDOWN/ROUNDUP operan sobre 15 dígitos significativos (evita que 19.65 se trunque a 19.64 por representación binaria).",
+    "14. Topes de plazo: por tipo de cliente (tabla) y por clave (tabla). CSS = 48 meses (regla de negocio propia; el portal usa 72 para todo Débito). Débito/Pago Automático respeta el plazo SOLICITADO topado por la clave.",
+    "15. La letra mínima de capacidad es $5; capacidad de descuento = % de la tabla por clave sobre el salario."
+  ]
+}

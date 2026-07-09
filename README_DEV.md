@@ -1,21 +1,23 @@
 # Cotizador Fiflouu — README para el desarrollador
 
-**Versión del documento: v86 · 09/07/2026** — este README se versiona junto con
+**Versión del documento: v87 · 09/07/2026** — este README se versiona junto con
 el cotizador: cada cambio de versión del HTML actualiza este documento y el
-paquete de parámetros (`Parametros_v86.json` / `.xlsx`). El historial de
+paquete de parámetros (`Parametros_v87.json` / `.xlsx`). El historial de
 versiones está al final.
 
 Guía para implementar el cotizador como sistema con **Backend + tablas + Base de
 datos**, partiendo de lo que ya está construido y validado en este repositorio.
 
-**Estado actual:** la versión vigente es `Cotizador_Fiflouu__web__v86.html` — un
+**Estado actual:** la versión vigente es `Cotizador_Fiflouu__web__v87.html` — un
 solo archivo HTML autocontenido (sin dependencias externas, sin GPL) cuyo motor
 de cálculo es JavaScript puro. Está **calibrado contra el portal de producción**
 (`zonasegura.financieralaprosperidad.app`): reproduce las 25 cotizaciones
 vigentes del portal con 316/316 rubros dentro de tolerancia (±$0.10 por rubro;
-Notaría ±$2.00). El v86 añade sobre el v85 un **switch por clave de la base de
-la comisión al promotor** (ver §3); con los switches en el método original
-(default) los resultados son idénticos al v85 calibrado.
+Notaría ±$2.00). El v86 añadió el **switch por clave de la base de
+la comisión al promotor** (ver §3) y el v87 **concilió el catálogo de claves**
+(nombres y orden canónicos en todo el sistema) y agregó un selector de clave en
+el apartado de matrices; con los switches en el método original (default) los
+resultados son idénticos al v85 calibrado.
 
 ---
 
@@ -23,13 +25,13 @@ la comisión al promotor** (ver §3); con los switches en el método original
 
 | Ruta | Qué es |
 |---|---|
-| `Cotizador_Fiflouu__web__v86.html` | **Versión vigente.** UI completa + motor por código + datos incrustados. |
-| `Cotizador_Fiflouu__web__v76..v85.html` | Versiones anteriores (v85 = calibración contra el portal; v76 es la última con motor de hoja de cálculo). |
-| `Parametros_v86.json` | **Todos los parámetros del negocio en JSON** (catálogos, matrices, topes, switch de base de comisión, reglas). Es la semilla de las tablas de la BD. |
-| `Parametros_v86_programador.xlsx` | Lo mismo, en Excel legible (8 hojas). |
+| `Cotizador_Fiflouu__web__v87.html` | **Versión vigente.** UI completa + motor por código + datos incrustados. |
+| `Cotizador_Fiflouu__web__v76..v86.html` | Versiones anteriores (v85 = calibración contra el portal; v76 es la última con motor de hoja de cálculo). |
+| `Parametros_v87.json` | **Todos los parámetros del negocio en JSON** (catálogos, matrices, topes, switch de base de comisión, reglas). Es la semilla de las tablas de la BD. |
+| `Parametros_v87_programador.xlsx` | Lo mismo, en Excel legible (8 hojas). |
 | `Comparativo_v85_vs_portal.xlsx` | Evidencia de la validación contra el portal (25 cotizaciones, rubro por rubro). |
-| `quote-engine/model.js` | **El motor de cálculo** (JavaScript puro, sin dependencias). Es el mismo código que corre dentro del v85. |
-| `quote-engine/build_v85.mjs` | Script que construye el v85 desde el v76 (inyecta motor, aplica matrices del portal, elimina fórmulas). |
+| `quote-engine/model.js` | **El motor de cálculo** (JavaScript puro, sin dependencias). Es el mismo código que corre dentro del v87. |
+| `quote-engine/build_v87.mjs` | Script que construye la versión vigente desde el v76 (inyecta motor, matrices del portal, switch de base, catálogo canónico). Los `build_v85/v86.mjs` construyen las versiones anteriores. |
 | `quote-engine/golden/casos_dorados.{csv,json}` | **1,095 casos de prueba** entrada→salida generados desde el v85. Contrato de paridad para cualquier reimplementación. |
 | `quote-engine/vigentes/vigentes.json` | Las 25 cotizaciones reales del portal (extracción única, solo lectura). |
 | `quote-engine/vigentes/verify_vigentes.mjs` | Verificador: corre el HTML headless y compara contra `vigentes.json`. |
@@ -44,10 +46,24 @@ la comisión al promotor** (ver §3); con los switches en el método original
    etiquetas visuales renombrables por cada financiera. Nunca uses el nombre
    como llave; siempre el código:
    `1=Diamante, 2=Platinum, 3=Premium, 4=24-59 meses, 5=0-23 meses, 6=Recien Nombrado, 7=Eventual`.
-2. **Productos / claves de descuento** (5): Empresa Privada, Jubilado,
-   Gobierno/Descuento Directo (usan las *matrices base*), Pago Automático/Débito
-   (Contraloría o CSS) y Descuento Voluntario (usan las *matrices variante*).
-   Débito y Voluntario **comparten** las mismas matrices, igual que el portal.
+2. **Claves de descuento — catálogo CANÓNICO (v87).** El selector de cotización
+   tiene 5 claves (`G8..G12`); Pago Automático (`G11`) se subdivide por entidad,
+   así que las tablas por clave manejan **6 claves operativas**, siempre con
+   estos nombres y este orden:
+
+   | # | Clave operativa | Selector | Grupo de matrices |
+   |---|---|---|---|
+   | 1 | Empresa Privada | G8 | base |
+   | 2 | Jubilado y Pensionado | G9 | base |
+   | 3 | Gobierno (Descuento Directo) | G10 | base |
+   | 4 | Pago Automático — Contraloría | G11 + entidad | variante |
+   | 5 | Pago Automático — CSS | G11 + entidad | variante |
+   | 6 | Descuento Voluntario | G12 | variante |
+
+   Las claves del grupo *base* comparten unas matrices (comisión/interés/gasto)
+   y las del grupo *variante* comparten las otras — igual que el portal. En la
+   BD: tabla `claves` con `grupo_matrices`; las tablas por clave (umbral, meses
+   de comisión, servicio, base de comisión) referencian las 6 claves operativas.
 3. **Configuración vigente:** ITBMS **financiado** (forma parte de la obligación)
    e interés **agregado** (simple, sin amortización).
 4. **Tope CSS = 48 meses** es regla de negocio propia de la financiera (el portal
@@ -57,7 +73,7 @@ la comisión al promotor** (ver §3); con los switches en el método original
 
 ## 3. Las reglas de cálculo
 
-Las 15 reglas del motor, en orden, están en `Parametros_v85.json` →
+Las 15 reglas del motor, en orden, están en `Parametros_v87.json` →
 `reglas_calculo` (y en la hoja «Reglas de cálculo» del Excel). Resumen de las
 que más se prestan a error:
 
@@ -93,7 +109,7 @@ que más se prestan a error:
   (`C24` letra, `G33` total, `F23` interés, …) es una función que se calcula al
   pedirla y se cachea hasta el próximo cambio de entrada.
 - Direcciona los valores con nombres heredados de la hoja original (celdas).
-  El mapeo celda → concepto está en `Parametros_v85.json`; las entradas/salidas
+  El mapeo celda → concepto está en `Parametros_v87.json`; las entradas/salidas
   principales:
 
 **Entradas** (via `setRaw('Calculadora', celda, valor)`):
@@ -183,7 +199,7 @@ Cualquier implementación nueva debe pasar, en este orden:
 Para verificar el HTML actual (necesita un Chromium headless):
 
 ```bash
-node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v86.html
+node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v87.html
 # salida esperada: cotizaciones OK 25/25 | rubros OK 316/316
 ```
 
@@ -203,7 +219,7 @@ node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v86.html
 
 - No usar los **nombres** de tipos como llave (se renombran por financiera).
 - No recalcular con float sin replicar los redondeos de `model.js` (§3).
-- No tomar parámetros de versiones < v86 (v85 fue la calibración; v86 = v85 + switch de base de comisión).
+- No tomar parámetros de versiones < v87 (v85 fue la calibración; v86 añadió el switch de base; v87 concilió el catálogo de claves).
 - No escribir en el portal `zonasegura` — es solo referencia de lectura.
 
 ## 9. Historial de versiones
@@ -219,3 +235,4 @@ node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v86.html
 | v81-v84 | jul 2026 | Calibración iterativa contra el portal: servicio 3%, meses por cronograma real (diciembres + gracia), notaría como residual de reconciliación (ambos modos). |
 | v85 | 04/07/2026 | **Calibración cerrada**: matrices literales del portal, tabla de meses de comisión, redondeos a 15 dígitos. 25/25 cotizaciones vigentes, 316/316 rubros (evidencia: `Comparativo_v85_vs_portal.xlsx`). |
 | v86 | 09/07/2026 | **Switch por clave de la base de la comisión al promotor** (total a pagar vs. monto a financiar); panel 5c separado por clave; Tablas ref con la base y resaltado amarillo. Default = método original (misma calibración del v85). |
+| v87 | 09/07/2026 | **Catálogo canónico de claves** (mismos nombres y orden en selector, panel y tablas; Pago Automático subdividido en Contraloría/CSS en todas las tablas) y **selector de clave en «5 · Matrices tarifarias»** para ver solo las matrices de la clave elegida. Etiquetas de la variante corregidas (también la usa Pago Automático). |
