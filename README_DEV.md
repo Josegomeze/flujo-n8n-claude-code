@@ -29,6 +29,7 @@ resultados son idénticos al v85 calibrado.
 | `Cotizador_Fiflouu__web__v76..v86.html` | Versiones anteriores (v85 = calibración contra el portal; v76 es la última con motor de hoja de cálculo). |
 | `Parametros_v87.json` | **Todos los parámetros del negocio en JSON** (catálogos, matrices, topes, switch de base de comisión, reglas). Es la semilla de las tablas de la BD. |
 | `Parametros_v87_programador.xlsx` | Lo mismo, en Excel legible (8 hojas). |
+| `CAMBIOS_v85_a_v87_Ruby_Postgres.md` | **Guía de migración v85 → v87** para la implementación en Ruby + PostgreSQL: SQL del catálogo de claves y del switch de base de comisión, código Ruby de la regla 8 y casos de prueba. |
 | `Comparativo_v85_vs_portal.xlsx` | Evidencia de la validación contra el portal (25 cotizaciones, rubro por rubro). |
 | `quote-engine/model.js` | **El motor de cálculo** (JavaScript puro, sin dependencias). Es el mismo código que corre dentro del v87. |
 | `quote-engine/build_v87.mjs` | Script que construye la versión vigente desde el v76 (inyecta motor, matrices del portal, switch de base, catálogo canónico). Los `build_v85/v86.mjs` construyen las versiones anteriores. |
