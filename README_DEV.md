@@ -1,5 +1,10 @@
 # Cotizador Fiflouu — README para el desarrollador
 
+**Versión del documento: v86 · 09/07/2026** — este README se versiona junto con
+el cotizador: cada cambio de versión del HTML actualiza este documento y el
+paquete de parámetros (`Parametros_v86.json` / `.xlsx`). El historial de
+versiones está al final.
+
 Guía para implementar el cotizador como sistema con **Backend + tablas + Base de
 datos**, partiendo de lo que ya está construido y validado en este repositorio.
 
@@ -200,3 +205,17 @@ node quote-engine/vigentes/verify_vigentes.mjs Cotizador_Fiflouu__web__v86.html
 - No recalcular con float sin replicar los redondeos de `model.js` (§3).
 - No tomar parámetros de versiones < v86 (v85 fue la calibración; v86 = v85 + switch de base de comisión).
 - No escribir en el portal `zonasegura` — es solo referencia de lectura.
+
+## 9. Historial de versiones
+
+| Versión | Fecha | Cambio |
+|---|---|---|
+| v72-v73 | jun 2026 | Reordenamiento de tipos de cliente al orden actual (1=Diamante … 7=Eventual). |
+| v74-v75 | jun 2026 | El código 1-7 pasa a ser la identidad fija; nombres renombrables por cada financiera desde su propio panel. |
+| v76 | jun 2026 | Versión de referencia visual (última con motor de hoja de cálculo/HyperFormula GPL). |
+| v77-v78 | jun-jul 2026 | Motor propio por código; la hoja «Calculadora» se elimina (0 fórmulas, sin GPL), visual intacto. |
+| v79 | jul 2026 | Corrección del corrimiento de matrices tarifarias introducido en el reorden del v73; plazos del sistema web. |
+| v80 | jul 2026 | Tope CSS = 48 meses (regla de negocio). |
+| v81-v84 | jul 2026 | Calibración iterativa contra el portal: servicio 3%, meses por cronograma real (diciembres + gracia), notaría como residual de reconciliación (ambos modos). |
+| v85 | 04/07/2026 | **Calibración cerrada**: matrices literales del portal, tabla de meses de comisión, redondeos a 15 dígitos. 25/25 cotizaciones vigentes, 316/316 rubros (evidencia: `Comparativo_v85_vs_portal.xlsx`). |
+| v86 | 09/07/2026 | **Switch por clave de la base de la comisión al promotor** (total a pagar vs. monto a financiar); panel 5c separado por clave; Tablas ref con la base y resaltado amarillo. Default = método original (misma calibración del v85). |
